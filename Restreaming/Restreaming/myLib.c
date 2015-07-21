@@ -60,20 +60,23 @@ int open_input_file(const char *filename,InputStream *input_stream)
     return 0;
 }
 
-void open_outputfile(const char *filename,OutputStream *out_stream,enum AVCodecID video_codec_id,
+int open_outputfile(const char *filename,OutputStream *out_stream,enum AVCodecID video_codec_id,
                      enum AVCodecID audio_codec_id,int video_width,int video_height){
     AVFormatContext *ofmt_ctx = NULL;
     AVCodec *video_codec = NULL;
     int ret = 0;
     AVCodec *audio_codec = NULL;
-    avformat_alloc_output_context2(&ofmt_ctx, NULL, "FLV", filename);
+    avformat_alloc_output_context2(&ofmt_ctx, NULL, NULL , filename);
     out_stream->format_ctx = ofmt_ctx;
     
     add_stream(ofmt_ctx, &video_codec, CODEC_ID_H264,video_width,video_height);
     open_video(ofmt_ctx, video_codec, NULL);
     
-    add_stream(ofmt_ctx,&audio_codec,audio_codec_id,video_width,video_height);
-    open_audio(ofmt_ctx, audio_codec, NULL);
+    if(audio_codec_id != AV_CODEC_ID_NONE) {
+        add_stream(ofmt_ctx,&audio_codec,audio_codec_id,video_width,video_height);
+        open_audio(ofmt_ctx, audio_codec, NULL);
+
+    }
     
     
     av_dump_format(ofmt_ctx, 0, filename, 1);
@@ -87,6 +90,14 @@ void open_outputfile(const char *filename,OutputStream *out_stream,enum AVCodecI
             exit(1);
         }
     }
+    
+    /* init muxer, write output file header */
+    ret = avformat_write_header(ofmt_ctx, NULL);
+    if (ret < 0) {
+        av_log(NULL, AV_LOG_ERROR, "Error occurred when opening output file\n");
+        return ret;
+    }
+    return 0;
 
 }
 

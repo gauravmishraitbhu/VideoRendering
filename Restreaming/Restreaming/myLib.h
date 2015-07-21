@@ -27,7 +27,7 @@ typedef struct OutputStream {
 
 int open_input_file(const char *filename,InputStream *input_stream);
 
-void open_outputfile(const char *filename,OutputStream *out_stream,enum AVCodecID video_codec_id,
+int open_outputfile(const char *filename,OutputStream *out_stream,enum AVCodecID video_codec_id,
                      enum AVCodecID audio_codec_id,int video_width,int video_height);
 
 void add_stream(AVFormatContext *oc,
