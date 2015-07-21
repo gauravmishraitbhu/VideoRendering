@@ -17,6 +17,7 @@ extern "C"{
 #include <libavfilter/buffersrc.h>
 #include <libavutil/opt.h>
 #include <libavutil/samplefmt.h>
+#include <libswscale/swscale.h>
 
 #include <libavdevice/avdevice.h>
 #include <libswscale/swscale.h>
@@ -31,9 +32,10 @@ extern "C"{
 
 using namespace std;
 
+////////////////////////////////////////CLASS DECLARATION/////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
+//Each class instance will represent a video file. either content video or animation video.
 class VideoFileInstance {
     
 public:
@@ -42,31 +44,114 @@ public:
     
 private:
     const char *fileName;
+    int VIDEO_STREAM_INDEX = 0;
     int type; //1 = content video 2 = animation video
     AVFormatContext *ifmt_ctx = NULL;
     OutputStream out_stream;
+    struct SwsContext *imgConvertCtxYUVToRGB = NULL;
+    struct SwsContext *imgConvertCtxRGBToYUV = NULL;
     
     //for opening file and decoder etc
     int openFile();
     int openOutputFile();
     
+    int convertToRGBFrame(AVFrame **,AVFrame **);
+    int convertToYuvFrame(AVFrame ** , AVFrame **);
+    
 };
 
+///////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 int VideoFileInstance::openOutputFile() {
-   open_outputfile("/Users/apple/temp/sample_output.mp4", &out_stream , CODEC_ID_H264, AV_CODEC_ID_NONE, ifmt_ctx->streams[0]->codec->width,ifmt_ctx->streams[0]->codec->height);
+  
+    int ret = open_outputfile("/Users/apple/temp/sample_output.mp4", &out_stream , CODEC_ID_H264, AV_CODEC_ID_NONE, ifmt_ctx->streams[0]->codec->width,ifmt_ctx->streams[0]->codec->height);
+    
+    
+    return ret;
+    
+}
+
+int VideoFileInstance::convertToRGBFrame(AVFrame **yuvframe,AVFrame **rgbPictInfo) {
+    int ret;
+    int width = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->width;
+    int height = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->height;
+
+    int m_bufferSize = avpicture_get_size(PIX_FMT_RGB24,width, height);
+    
+    uint8_t *buffer = (uint8_t *)av_malloc(m_bufferSize);
+    
+    //init context if not done already.
+    if (imgConvertCtxYUVToRGB == NULL) {
+        //init once
+        imgConvertCtxYUVToRGB = sws_getContext(width, height, PIX_FMT_YUV420P, width, height, PIX_FMT_RGB24, SWS_BICUBIC, NULL, NULL, NULL);
+        
+        if(imgConvertCtxYUVToRGB == NULL) {
+            av_log(NULL,AV_LOG_ERROR,"error creating img context");
+            return -1;
+        }
+        
+    }
     
     
     
-    return 0;
+    avpicture_fill((AVPicture*)(*rgbPictInfo), buffer,
+                   PIX_FMT_RGB24,
+                   width, height);
+    
+    int destLineSize[1] = {3*width};
+    
+    ret = sws_scale(imgConvertCtxYUVToRGB, (*yuvframe)->data, (*yuvframe)->linesize, 0, height,
+              (*rgbPictInfo)->data, destLineSize);
+    
+    av_free(buffer);
+    
+    
+    return ret;
+}
+
+int VideoFileInstance::convertToYuvFrame (AVFrame **rgbFrame , AVFrame ** yuvFrame) {
+    int ret = 0;
+    int width = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->width;
+    int height = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->height;
+    int m_bufferSize = avpicture_get_size(PIX_FMT_YUV420P, width, height);
+    
+    uint8_t *buffer = (uint8_t *)av_malloc(m_bufferSize);
+    
+    avpicture_fill((AVPicture*)(*yuvFrame), buffer, PIX_FMT_YUV420P,
+                   width, height);
+    
+    if(imgConvertCtxRGBToYUV == NULL) {
+        imgConvertCtxRGBToYUV = sws_getContext(width, height, PIX_FMT_RGB24, width, height, PIX_FMT_YUV420P, SWS_BICUBIC, NULL, NULL, NULL);
+        
+        if(imgConvertCtxRGBToYUV == NULL){
+            av_log(NULL,AV_LOG_ERROR,"error creating img context");
+            return -1;
+        }
+    }
+    
+    avpicture_fill((AVPicture*)(*yuvFrame), buffer,
+                   PIX_FMT_YUV420P,
+                   width, height);
+
+
+    
+    
+    sws_scale(imgConvertCtxRGBToYUV,(*rgbFrame)->data , (*rgbFrame)->linesize, 0, height,
+              (*yuvFrame)->data , (*yuvFrame)->linesize);
+    
+    av_free(buffer);
+    
+    return ret;
 }
 
 int VideoFileInstance::startDecoding() {
     
     AVPacket packet = { .data = NULL, .size = 0 };
     
-    AVFrame *frame;
+    AVFrame *frame , *rgbFrame , *yuvFrame;
     AVPacket encoded_packet;
-    uint8_t endcode[] = { 0, 0, 1, 0xb7 };
     
     int ret = 0;
      int frame_decoded = 0;
@@ -98,16 +183,24 @@ int VideoFileInstance::startDecoding() {
         
         ret = avcodec_decode_video2(in_stream->codec, frame, &frame_decoded, &packet);
 
+        if(ret<0){
+            av_frame_free(&frame);
+            printf("could not decode a packet....");
+            return ret;
+        }
         
         if(frame_decoded){
             
-            if(ret<0){
-                av_frame_free(&frame);
-                printf("could not decode a packet....");
-                return ret;
-            }
+            
+            rgbFrame = av_frame_alloc();
+            yuvFrame = av_frame_alloc();
+            
+            convertToRGBFrame(&frame, &rgbFrame);
+            convertToYuvFrame(&rgbFrame, &yuvFrame);
+            
             
             frame->pts = av_frame_get_best_effort_timestamp(frame);
+            yuvFrame->pts = frame->pts;
             
             av_init_packet(&encoded_packet);
            
@@ -115,7 +208,7 @@ int VideoFileInstance::startDecoding() {
             
             ret = avcodec_encode_video2(this->out_stream.format_ctx->streams[0]->codec,
                                   &encoded_packet,
-                                  frame,
+                                  yuvFrame,
                                   &encode_success);
             
             encoded_packet.stream_index = 0;
@@ -132,10 +225,17 @@ int VideoFileInstance::startDecoding() {
             
             
             av_free_packet(&encoded_packet);
-            av_free_packet(&packet);
+            av_frame_free(&rgbFrame);
+            av_frame_free(&yuvFrame);
+            av_frame_free(&frame);
+            
+        }else{
+            //frame was not decoded properly
+            av_frame_free(&frame);
+            av_log(NULL,AV_LOG_DEBUG,"frame was not fully decoded");
         }
         
-       
+       av_free_packet(&packet);
 
         
     }
