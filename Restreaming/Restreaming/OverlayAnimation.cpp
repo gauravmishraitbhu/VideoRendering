@@ -34,6 +34,8 @@ extern "C"{
 
 using namespace std;
 
+
+
 ////////////////////////////////////////CLASS DECLARATION/////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -50,10 +52,18 @@ public:
      */
     int getSingleFrame(AVFrame **frame);
     
+    /**
+     to be called for content video. this will run the main loop of program
+     which will open video frame by frame and overlay respective animation frame
+     on top of animation video.
+     */
+    int startOverlaying();
+    
 private:
     const char *fileName;
     int VIDEO_STREAM_INDEX = 0;
-    int type; //1 = content video 2 = animation video
+    int VIDEO_TYPE_CONTENT = 1 , VIDEO_TYPE_ANIMATION = 2;
+    int videoType; //1 = content video 2 = animation video
     AVFormatContext *ifmt_ctx = NULL;
     OutputStream out_stream;
     struct SwsContext *imgConvertCtxYUVToRGB = NULL;
@@ -61,12 +71,21 @@ private:
     
     //for opening file and decoder etc
     int openFile();
+    //should apply for main video
     int openOutputFile();
     
     int convertToRGBFrame(AVFrame **,AVFrame **);
     int convertToYuvFrame(AVFrame ** , AVFrame **);
     
+    /**
+     for releasing context and closing codec etc.
+     */
+    int cleanup();
+    
 };
+
+
+VideoFileInstance *animationFileInstance;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -74,17 +93,175 @@ private:
 
 int VideoFileInstance::openOutputFile() {
   
-    int ret = open_outputfile("/Users/apple/temp/sample_output.mp4", &out_stream , CODEC_ID_H264, AV_CODEC_ID_NONE, ifmt_ctx->streams[0]->codec->width,ifmt_ctx->streams[0]->codec->height);
+    int ret = open_outputfile("/Users/apple/temp/sample_output.mp4",
+                              &out_stream , CODEC_ID_H264,
+                              AV_CODEC_ID_NONE,
+                              ifmt_ctx->streams[0]->codec->width,
+                              ifmt_ctx->streams[0]->codec->height
+                              );
     
     
     return ret;
     
 }
 
-int VideoFileInstance::getSingleFrame(AVFrame **frame) {
+int VideoFileInstance::startOverlaying(){
+    
+    if(videoType == VIDEO_TYPE_ANIMATION){
+        av_log(NULL,AV_LOG_ERROR,"startOverlaying should not be called on animation video.");
+        return -1;
+    }
+    
     int ret;
+    AVPacket packet;
+    AVFrame *contentVideoFrame, *contentVideoRGB , *contentVideoFinalYUV;
+    AVFrame *animationVideoFrame , *animationVideoRGB;
+    int frameDecoded = 0,stream_index = 0;
+    int frame_decoded = 0;
+    
+    while(1){
+        
+        av_init_packet(&packet);
+        ret = av_read_frame(ifmt_ctx, &packet);
+        
+        if(ret < 0) {
+            av_log( NULL , AV_LOG_ERROR , "error reading frame or end of file");
+            break;
+        }
+        
+        AVStream *in_stream = ifmt_ctx->streams[packet.stream_index];
+        
+        //for now ignore audio packets later will just mux audio packets
+        //into the container currently the contaner doesnt have the
+        //audi channel
+        if(in_stream->codec->codec_type != AVMEDIA_TYPE_VIDEO){
+            continue;
+        }
+        
+        stream_index = packet.stream_index;
+        frame_decoded = 0;
+        contentVideoFrame = av_frame_alloc();
+        
+        //fix timestamps ?
+        av_packet_rescale_ts(&packet,
+                             ifmt_ctx->streams[stream_index]->time_base,
+                             ifmt_ctx->streams[stream_index]->codec->time_base);
+        
+        
+        //decode the packet to frame
+        ret = avcodec_decode_video2(in_stream->codec,
+                                    contentVideoFrame,
+                                    &frame_decoded,
+                                    &packet
+                                    );
+        
+        
+        
+        if(ret<0){
+            av_frame_free(&contentVideoFrame);
+            printf("could not decode a packet....");
+            return ret;
+        }
+
+        if(frame_decoded){
+            // now we have frame from content video
+            
+            contentVideoRGB = av_frame_alloc();
+            animationVideoFrame = av_frame_alloc();
+            animationVideoRGB = av_frame_alloc();
+            
+            
+            //convert the frame to rgb
+            convertToRGBFrame(&contentVideoFrame, &contentVideoRGB);
+            
+            //get a frame from animation video.
+            animationFileInstance->getSingleFrame(&animationVideoFrame);
+            
+            //convert the animation frame to rgb.
+            animationFileInstance->convertToRGBFrame( &animationVideoFrame, &animationVideoRGB);
+            
+            //cleanup
+            av_freep(contentVideoRGB->data);
+            av_frame_free(&contentVideoFrame);
+            av_frame_free(&contentVideoRGB);
+            
+            av_freep(animationVideoRGB->data);
+            av_frame_free(&contentVideoFrame);
+            av_frame_free(&contentVideoRGB);
+
+        }else{
+            av_frame_free(&contentVideoFrame);
+        }
+
+        av_free_packet(&packet);
+    }
+    
+    return ret;
+}
+
+//audio frames will be discarded this function should only be called for animation video.
+int VideoFileInstance::getSingleFrame(AVFrame **frame) {
     
     
+    if(videoType == VIDEO_TYPE_CONTENT){
+        av_log(NULL,AV_LOG_ERROR,"getSingleFrame should not be called on content video. this can cause loss of audio data");
+        return -1;
+    }
+    
+    int ret = 0;
+    AVPacket packet;
+    av_init_packet(&packet);
+    int frameDecoded = 0;
+    bool gotFrame = false;
+    
+    while(!gotFrame){
+        av_init_packet(&packet);
+        
+        //get a packet out of container
+        ret = av_read_frame(ifmt_ctx, &packet);
+        
+        if(ret < 0){
+            av_log(NULL,AV_LOG_ERROR,"no more frames left to be read");
+            return ret ;
+        }
+        
+        int stream_index = packet.stream_index;
+        
+        if(stream_index != VIDEO_STREAM_INDEX){
+            //if not video frame just discard the frame.
+            //in animation video audio frames are not expected
+            continue;
+        }
+        
+        AVStream *in_stream = ifmt_ctx->streams[packet.stream_index];
+        *frame = av_frame_alloc();
+        
+        av_packet_rescale_ts(&packet,
+                             ifmt_ctx->streams[stream_index]->time_base,
+                             ifmt_ctx->streams[stream_index]->codec->time_base);
+        
+        ret = avcodec_decode_video2(in_stream->codec, (*frame), &frameDecoded, &packet);
+        
+        if(ret<0){
+            av_frame_free(frame);
+            printf("could not decode a packet....trying next packet");
+            continue;
+        }
+
+        if(frameDecoded){
+            //at this point frame points to a decoded frame so
+            //job done for this function
+            ret = 0;
+            av_free_packet(&packet);
+            gotFrame = true;
+        }else{
+            av_free_packet(&packet);
+            av_frame_free(frame);
+            continue;
+        }
+        
+        
+    }
     
     return ret;
 }
@@ -93,8 +270,6 @@ int VideoFileInstance::convertToRGBFrame(AVFrame **yuvframe,AVFrame **rgbPictInf
     int ret;
     int width = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->width;
     int height = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->height;
-    
-    
     
     
     //init context if not done already.
@@ -303,12 +478,13 @@ int VideoFileInstance::openFile() {
 
 VideoFileInstance::VideoFileInstance(int type,const char *filename){
     cout<< "creating instance of video file. of type  " << type << "\n";
-    this->type = type;
+    this->videoType = type;
     this->fileName = filename;
     openFile();
     
-    openOutputFile();
-    
+    if(type == VIDEO_TYPE_CONTENT){
+        openOutputFile();
+    }
     
 }
 
