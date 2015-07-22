@@ -16,8 +16,10 @@ extern "C"{
 #include <libavfilter/buffersink.h>
 #include <libavfilter/buffersrc.h>
 #include <libavutil/opt.h>
+#include <libavutil/imgutils.h>
 #include <libavutil/samplefmt.h>
 #include <libswscale/swscale.h>
+
 
 #include <libavdevice/avdevice.h>
 #include <libswscale/swscale.h>
@@ -41,6 +43,12 @@ class VideoFileInstance {
 public:
     VideoFileInstance(int , const char *);
     int startDecoding();
+    
+    /**
+     reads packet from input format context and decode it to frame.
+     @param frame the frame in which decoded data will be returned.
+     */
+    int getSingleFrame(AVFrame **frame);
     
 private:
     const char *fileName;
@@ -73,19 +81,26 @@ int VideoFileInstance::openOutputFile() {
     
 }
 
+int VideoFileInstance::getSingleFrame(AVFrame **frame) {
+    int ret;
+    
+    
+    
+    return ret;
+}
+
 int VideoFileInstance::convertToRGBFrame(AVFrame **yuvframe,AVFrame **rgbPictInfo) {
     int ret;
     int width = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->width;
     int height = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->height;
-
-    int m_bufferSize = avpicture_get_size(PIX_FMT_RGB24,width, height);
     
-    uint8_t *buffer = (uint8_t *)av_malloc(m_bufferSize);
+    
+    
     
     //init context if not done already.
     if (imgConvertCtxYUVToRGB == NULL) {
         //init once
-        imgConvertCtxYUVToRGB = sws_getContext(width, height, PIX_FMT_YUV420P, width, height, PIX_FMT_RGB24, SWS_BICUBIC, NULL, NULL, NULL);
+        imgConvertCtxYUVToRGB = sws_getContext(width, height, PIX_FMT_YUV420P, width, height, PIX_FMT_RGB24, SWS_FAST_BILINEAR, 0, 0, 0);
         
         if(imgConvertCtxYUVToRGB == NULL) {
             av_log(NULL,AV_LOG_ERROR,"error creating img context");
@@ -94,18 +109,20 @@ int VideoFileInstance::convertToRGBFrame(AVFrame **yuvframe,AVFrame **rgbPictInf
         
     }
     
+
+    // call av_freep(rgbPictInfo->data) to free memory
     
+    av_image_alloc( (*rgbPictInfo)->data,   //data to be filled
+                   (*rgbPictInfo)->linesize,//line sizes to be filled
+                   width, height,
+                   PIX_FMT_RGB24,           //pixel format
+                   32                       //aling
+                   );
     
-    avpicture_fill((AVPicture*)(*rgbPictInfo), buffer,
-                   PIX_FMT_RGB24,
-                   width, height);
-    
-    int destLineSize[1] = {3*width};
+
     
     ret = sws_scale(imgConvertCtxYUVToRGB, (*yuvframe)->data, (*yuvframe)->linesize, 0, height,
-              (*rgbPictInfo)->data, destLineSize);
-    
-    av_free(buffer);
+              (*rgbPictInfo)->data, (*rgbPictInfo)->linesize);
     
     
     return ret;
@@ -115,15 +132,9 @@ int VideoFileInstance::convertToYuvFrame (AVFrame **rgbFrame , AVFrame ** yuvFra
     int ret = 0;
     int width = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->width;
     int height = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->height;
-    int m_bufferSize = avpicture_get_size(PIX_FMT_YUV420P, width, height);
-    
-    uint8_t *buffer = (uint8_t *)av_malloc(m_bufferSize);
-    
-    avpicture_fill((AVPicture*)(*yuvFrame), buffer, PIX_FMT_YUV420P,
-                   width, height);
-    
+
     if(imgConvertCtxRGBToYUV == NULL) {
-        imgConvertCtxRGBToYUV = sws_getContext(width, height, PIX_FMT_RGB24, width, height, PIX_FMT_YUV420P, SWS_BICUBIC, NULL, NULL, NULL);
+        imgConvertCtxRGBToYUV = sws_getContext(width, height, PIX_FMT_RGB24, width, height, PIX_FMT_YUV420P, SWS_FAST_BILINEAR, 0, 0, 0);
         
         if(imgConvertCtxRGBToYUV == NULL){
             av_log(NULL,AV_LOG_ERROR,"error creating img context");
@@ -131,17 +142,18 @@ int VideoFileInstance::convertToYuvFrame (AVFrame **rgbFrame , AVFrame ** yuvFra
         }
     }
     
-    avpicture_fill((AVPicture*)(*yuvFrame), buffer,
-                   PIX_FMT_YUV420P,
-                   width, height);
-
-
-    
+   
+    av_image_alloc( (*yuvFrame)->data,   //data to be filled
+                   (*yuvFrame)->linesize, //line sizes to be filled
+                   width, height,
+                   PIX_FMT_YUV420P,        //pixel format
+                   32                      //aling
+                   );
     
     sws_scale(imgConvertCtxRGBToYUV,(*rgbFrame)->data , (*rgbFrame)->linesize, 0, height,
               (*yuvFrame)->data , (*yuvFrame)->linesize);
     
-    av_free(buffer);
+
     
     return ret;
 }
@@ -225,6 +237,8 @@ int VideoFileInstance::startDecoding() {
             
             
             av_free_packet(&encoded_packet);
+            av_freep(rgbFrame->data);
+            av_freep(yuvFrame->data);
             av_frame_free(&rgbFrame);
             av_frame_free(&yuvFrame);
             av_frame_free(&frame);
@@ -304,7 +318,7 @@ int main(int argc, char **argv) {
     avfilter_register_all();
     
     
-    VideoFileInstance *contentVideo = new VideoFileInstance(1,"/Users/apple/temp/small_no_audio.mp4");
+    VideoFileInstance *contentVideo = new VideoFileInstance(1,"/Users/apple/temp/merged.mp4");
     contentVideo->startDecoding();
 
 }
