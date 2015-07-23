@@ -59,6 +59,15 @@ public:
      */
     int startOverlaying();
     
+    int getVideoHeight() {
+        return ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->height;
+    }
+    
+    int getVideoWidth() {
+        return ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->width;
+    }
+    
+    
 private:
     const char *fileName;
     int VIDEO_STREAM_INDEX = 0;
@@ -113,11 +122,12 @@ int VideoFileInstance::startOverlaying(){
     }
     
     int ret;
-    AVPacket packet;
+    AVPacket packet,encodedPacket;
     AVFrame *contentVideoFrame, *contentVideoRGB , *contentVideoFinalYUV;
     AVFrame *animationVideoFrame , *animationVideoRGB;
-    int frameDecoded = 0,stream_index = 0;
+    int frameDecoded = 0,stream_index = 0,encode_success;
     int frame_decoded = 0;
+    int64_t pts ;
     
     while(1){
         
@@ -164,11 +174,17 @@ int VideoFileInstance::startOverlaying(){
         }
 
         if(frame_decoded){
+            
+            pts = av_frame_get_best_effort_timestamp(contentVideoFrame);
+            contentVideoFrame->pts = pts;
+            
+            
             // now we have frame from content video
             
             contentVideoRGB = av_frame_alloc();
             animationVideoFrame = av_frame_alloc();
             animationVideoRGB = av_frame_alloc();
+            contentVideoFinalYUV = av_frame_alloc();
             
             
             //convert the frame to rgb
@@ -180,6 +196,62 @@ int VideoFileInstance::startOverlaying(){
             //convert the animation frame to rgb.
             animationFileInstance->convertToRGBFrame( &animationVideoFrame, &animationVideoRGB);
             
+            
+            
+            //now copy the pixels from animation frame to content frame.
+            int animationFrameHeight = animationFileInstance->getVideoHeight();
+            int animationFrameWidth = animationFileInstance->getVideoWidth();
+            int contentFrameHeight = this->getVideoHeight();
+            int contentFrameWidth = this->getVideoWidth();
+            
+            copyVideoPixels(&animationVideoRGB ,
+                            &contentVideoRGB,
+                            animationFrameHeight , animationFrameWidth,
+                            contentFrameHeight , contentFrameWidth);
+            
+            
+            
+            //convert the content rgb to yuv
+            convertToYuvFrame(&contentVideoRGB, &contentVideoFinalYUV);
+            
+            
+            contentVideoFinalYUV->pts = pts;
+            
+            //encode the packet
+            av_init_packet(&encodedPacket);
+            encode_success = 0;
+            ret = avcodec_encode_video2(this->out_stream.format_ctx->streams[0]->codec,
+                                        &encodedPacket,
+                                        contentVideoFinalYUV,
+                                        &encode_success);
+            
+            if(ret < 0){
+                av_log(NULL,AV_LOG_ERROR , "Error encoding a frame");
+                
+            }
+            
+
+            if(encode_success){
+                encodedPacket.stream_index = VIDEO_STREAM_INDEX;
+                
+                
+                av_packet_rescale_ts(&encodedPacket,
+                                     this->out_stream.format_ctx->streams[0]->codec->time_base,
+                                     this->out_stream.format_ctx->streams[0]->time_base);
+                
+                
+                ret = av_interleaved_write_frame(this->out_stream.format_ctx, &encodedPacket);
+                
+                if(ret < 0){
+                    av_log(NULL,AV_LOG_ERROR , "Error writing  a frame to container...");
+                }
+
+            }else{
+                //av_log(NULL,AV_LOG_ERROR , "Error encoding a frame");
+
+            }
+            
+            
             //cleanup
             av_freep(contentVideoRGB->data);
             av_frame_free(&contentVideoFrame);
@@ -188,6 +260,11 @@ int VideoFileInstance::startOverlaying(){
             av_freep(animationVideoRGB->data);
             av_frame_free(&contentVideoFrame);
             av_frame_free(&contentVideoRGB);
+            
+            av_freep(contentVideoFinalYUV->data);
+            av_frame_free(&contentVideoFinalYUV);
+            
+            av_free_packet(&encodedPacket);
 
         }else{
             av_frame_free(&contentVideoFrame);
@@ -196,8 +273,112 @@ int VideoFileInstance::startOverlaying(){
         av_free_packet(&packet);
     }
     
+    av_write_trailer(out_stream.format_ctx);
+    
     return ret;
 }
+
+int VideoFileInstance::startDecoding() {
+    
+    AVPacket packet = { .data = NULL, .size = 0 };
+    
+    AVFrame *frame , *rgbFrame , *yuvFrame;
+    AVPacket encoded_packet;
+    
+    int ret = 0;
+    int frame_decoded = 0;
+    int stream_index;
+    int encode_success;
+    while(1) {
+        
+        ret = av_read_frame(ifmt_ctx, &packet);
+        
+        if(ret < 0) {
+            av_log( NULL , AV_LOG_ERROR , "error reading frame or end of file");
+            break;
+        }
+        
+        AVStream *in_stream = ifmt_ctx->streams[packet.stream_index];
+        
+        //for now ignore audio packets
+        if(in_stream->codec->codec_type != AVMEDIA_TYPE_VIDEO){
+            continue;
+        }
+        
+        stream_index = packet.stream_index;
+        frame_decoded = 0;
+        frame = av_frame_alloc();
+        
+        av_packet_rescale_ts(&packet,
+                             ifmt_ctx->streams[stream_index]->time_base,
+                             ifmt_ctx->streams[stream_index]->codec->time_base);
+        
+        ret = avcodec_decode_video2(in_stream->codec, frame, &frame_decoded, &packet);
+        
+        if(ret<0){
+            av_frame_free(&frame);
+            printf("could not decode a packet....");
+            return ret;
+        }
+        
+        if(frame_decoded){
+            
+            
+            rgbFrame = av_frame_alloc();
+            yuvFrame = av_frame_alloc();
+            
+            convertToRGBFrame(&frame, &rgbFrame);
+            convertToYuvFrame(&rgbFrame, &yuvFrame);
+            
+            
+            frame->pts = av_frame_get_best_effort_timestamp(frame);
+            yuvFrame->pts = frame->pts;
+            
+            av_init_packet(&encoded_packet);
+            
+            encode_success = 0;
+            
+            ret = avcodec_encode_video2(this->out_stream.format_ctx->streams[0]->codec,
+                                        &encoded_packet,
+                                        yuvFrame,
+                                        &encode_success);
+            
+            encoded_packet.stream_index = 0;
+            
+            if(encode_success){
+                av_packet_rescale_ts(&encoded_packet,
+                                     this->out_stream.format_ctx->streams[0]->codec->time_base,
+                                     this->out_stream.format_ctx->streams[0]->time_base);
+                
+                //encoded_packet.pts = frame->pts;
+                // encoded_packet.dts = frame->pts;
+                ret = av_interleaved_write_frame(this->out_stream.format_ctx, &encoded_packet);
+            }
+            
+            
+            av_free_packet(&encoded_packet);
+            av_freep(rgbFrame->data);
+            av_freep(yuvFrame->data);
+            av_frame_free(&rgbFrame);
+            av_frame_free(&yuvFrame);
+            av_frame_free(&frame);
+            
+        }else{
+            //frame was not decoded properly
+            av_frame_free(&frame);
+            av_log(NULL,AV_LOG_DEBUG,"frame was not fully decoded");
+        }
+        
+        av_free_packet(&packet);
+        
+        
+    }
+    av_write_trailer(out_stream.format_ctx);
+    cout<<"successfully decoded all video frames";
+    return 0;
+    
+}
+
 
 //audio frames will be discarded this function should only be called for animation video.
 int VideoFileInstance::getSingleFrame(AVFrame **frame) {
@@ -333,106 +514,6 @@ int VideoFileInstance::convertToYuvFrame (AVFrame **rgbFrame , AVFrame ** yuvFra
     return ret;
 }
 
-int VideoFileInstance::startDecoding() {
-    
-    AVPacket packet = { .data = NULL, .size = 0 };
-    
-    AVFrame *frame , *rgbFrame , *yuvFrame;
-    AVPacket encoded_packet;
-    
-    int ret = 0;
-     int frame_decoded = 0;
-    int stream_index;
-     int encode_success;
-    while(1) {
-        
-        ret = av_read_frame(ifmt_ctx, &packet);
-        
-        if(ret < 0) {
-            av_log( NULL , AV_LOG_ERROR , "error reading frame or end of file");
-            break;
-        }
-        
-        AVStream *in_stream = ifmt_ctx->streams[packet.stream_index];
-        
-        //for now ignore audio packets
-        if(in_stream->codec->codec_type != AVMEDIA_TYPE_VIDEO){
-            continue;
-        }
-        
-        stream_index = packet.stream_index;
-        frame_decoded = 0;
-        frame = av_frame_alloc();
-        
-        av_packet_rescale_ts(&packet,
-                             ifmt_ctx->streams[stream_index]->time_base,
-                             ifmt_ctx->streams[stream_index]->codec->time_base);
-        
-        ret = avcodec_decode_video2(in_stream->codec, frame, &frame_decoded, &packet);
-
-        if(ret<0){
-            av_frame_free(&frame);
-            printf("could not decode a packet....");
-            return ret;
-        }
-        
-        if(frame_decoded){
-            
-            
-            rgbFrame = av_frame_alloc();
-            yuvFrame = av_frame_alloc();
-            
-            convertToRGBFrame(&frame, &rgbFrame);
-            convertToYuvFrame(&rgbFrame, &yuvFrame);
-            
-            
-            frame->pts = av_frame_get_best_effort_timestamp(frame);
-            yuvFrame->pts = frame->pts;
-            
-            av_init_packet(&encoded_packet);
-           
-            encode_success = 0;
-            
-            ret = avcodec_encode_video2(this->out_stream.format_ctx->streams[0]->codec,
-                                  &encoded_packet,
-                                  yuvFrame,
-                                  &encode_success);
-            
-            encoded_packet.stream_index = 0;
-
-            if(encode_success){
-                av_packet_rescale_ts(&encoded_packet,
-                                     this->out_stream.format_ctx->streams[0]->codec->time_base,
-                                     this->out_stream.format_ctx->streams[0]->time_base);
-            
-                //encoded_packet.pts = frame->pts;
-               // encoded_packet.dts = frame->pts;
-                ret = av_interleaved_write_frame(this->out_stream.format_ctx, &encoded_packet);
-            }
-            
-            
-            av_free_packet(&encoded_packet);
-            av_freep(rgbFrame->data);
-            av_freep(yuvFrame->data);
-            av_frame_free(&rgbFrame);
-            av_frame_free(&yuvFrame);
-            av_frame_free(&frame);
-            
-        }else{
-            //frame was not decoded properly
-            av_frame_free(&frame);
-            av_log(NULL,AV_LOG_DEBUG,"frame was not fully decoded");
-        }
-        
-       av_free_packet(&packet);
-
-        
-    }
-     av_write_trailer(out_stream.format_ctx);
-    cout<<"successfully decoded all video frames";
-    return 0;
-    
-}
 
 int VideoFileInstance::openFile() {
     int ret;
@@ -494,7 +575,12 @@ int main(int argc, char **argv) {
     avfilter_register_all();
     
     
-    VideoFileInstance *contentVideo = new VideoFileInstance(1,"/Users/apple/temp/merged.mp4");
-    contentVideo->startDecoding();
+    VideoFileInstance *contentVideo = new VideoFileInstance(1,"/Users/apple/temp/small_no_audio.mp4");
+    
+    animationFileInstance = new VideoFileInstance(2,"/Users/apple/temp/kinetic_small.mp4");
+    
+    contentVideo->startOverlaying();
+    
+    //contentVideo->startDecoding();
 
 }

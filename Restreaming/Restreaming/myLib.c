@@ -265,3 +265,44 @@ void open_audio(AVFormatContext *oc, AVCodec *codec, AVDictionary *opt_arg)
 //    }
 }
 
+
+
+int copyVideoPixels (AVFrame **fromFrame, AVFrame **destFrame, int srcHeight , int srcWidth,int dstHeight,int dstWidth){
+    int ret=0;
+    
+    uint8_t srcPixelRed , srcPixelGreen , srcPixelBlue;
+    int srcRow=0 , srcCol=0 ;   //srcRow from 0 to height
+    int dstRow = 0,dstCol = 0 ;
+    int startRow=0 , startCol = 0; //starting coordinates in content frame where
+                                    //animation needs to be put
+    
+
+    int srcLinesize=0,destLinesize=0;
+    srcLinesize = (*fromFrame)->linesize[0];
+    destLinesize = (*destFrame)->linesize[0];
+    //fromFrame will be the animation frame.
+    
+    for (srcRow = 0 ;srcRow < srcHeight ; srcRow++){
+        for (srcCol = 0 ; srcCol < srcWidth ; srcCol++){
+            
+            dstRow = srcRow + startRow;
+            dstCol = srcCol + startCol;
+            srcPixelRed = (*fromFrame)->data[0][srcRow * srcLinesize + 3*srcCol];
+            srcPixelGreen = (*fromFrame)->data[0][srcRow * srcLinesize + 3*srcCol + 1];
+            srcPixelBlue = (*fromFrame)->data[0][srcRow * srcLinesize + 3*srcCol + 2];
+            
+            if(srcPixelRed == 255 && srcPixelGreen == 255 && srcPixelBlue == 255){
+                continue;
+            }
+            
+            (*destFrame)->data[0][dstRow * destLinesize + 3*dstCol] = srcPixelRed;
+            (*destFrame)->data[0][dstRow * destLinesize + 3*dstCol + 1] = srcPixelGreen;
+            (*destFrame)->data[0][dstRow * destLinesize + 3*dstCol + 2] = srcPixelBlue;
+        }
+    }
+    
+
+    
+    return ret;
+}
+

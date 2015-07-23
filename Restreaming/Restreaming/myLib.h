@@ -38,3 +38,9 @@ void add_stream(AVFormatContext *oc,
 void open_video(AVFormatContext *oc, AVCodec *codec, AVDictionary *opt_arg);
 
 void open_audio(AVFormatContext *oc, AVCodec *codec, AVDictionary *opt_arg);
+
+/**
+ @param srcFrame - rgb24 frame from which pixels need to be copy.
+ @param destFrame - rgb24 frame to which pixels needs to be copied.
+ */
+int copyVideoPixels(AVFrame **srcFrame, AVFrame **destFrame , int srcHeight , int srcWidth, int dstHeight,int destWidth);
