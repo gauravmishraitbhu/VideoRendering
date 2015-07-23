@@ -19,18 +19,21 @@ extern "C"{
 #include <libavutil/imgutils.h>
 #include <libavutil/samplefmt.h>
 #include <libswscale/swscale.h>
-
-
+    
+    
 #include <libavdevice/avdevice.h>
 #include <libswscale/swscale.h>
 #include <libavutil/pixdesc.h>
-
+    
 #include <libavutil/time.h>
-#include "myLib.h"
+
 }
 
+#include "Utils.h"
 #include <iostream>
 #include <string>
+#include <map>
+#include <boost/any.hpp>
 
 using namespace std;
 
@@ -67,6 +70,11 @@ public:
         return ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->width;
     }
     
+    /**
+     for releasing context and closing codec etc.
+     */
+    int cleanup();
+    
     
 private:
     const char *fileName;
@@ -86,10 +94,7 @@ private:
     int convertToRGBFrame(AVFrame **,AVFrame **);
     int convertToYuvFrame(AVFrame ** , AVFrame **);
     
-    /**
-     for releasing context and closing codec etc.
-     */
-    int cleanup();
+    
     
 };
 
@@ -100,13 +105,35 @@ VideoFileInstance *animationFileInstance;
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+int VideoFileInstance::cleanup(){
+    avformat_close_input(&ifmt_ctx);
+    
+    if(videoType == VIDEO_TYPE_CONTENT){
+        if (out_stream.format_ctx && !(out_stream.format_ctx->oformat->flags & AVFMT_NOFILE))
+            avio_close(out_stream.format_ctx->pb);
+        
+        
+        avformat_free_context(out_stream.format_ctx);
+    }
+    
+    
+    return 0;
+}
+
 int VideoFileInstance::openOutputFile() {
-  
+    
+    std::map<string,boost::any> videoOptions ;
+    videoOptions["bitrate"] = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->bit_rate;
+    videoOptions["timebase_denominator"] = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->time_base.den;
+    
+
+    
     int ret = open_outputfile("/Users/apple/temp/sample_output.mp4",
                               &out_stream , CODEC_ID_H264,
                               AV_CODEC_ID_NONE,
                               ifmt_ctx->streams[0]->codec->width,
-                              ifmt_ctx->streams[0]->codec->height
+                              ifmt_ctx->streams[0]->codec->height,
+                              videoOptions
                               );
     
     
@@ -172,7 +199,7 @@ int VideoFileInstance::startOverlaying(){
             printf("could not decode a packet....");
             return ret;
         }
-
+        
         if(frame_decoded){
             
             pts = av_frame_get_best_effort_timestamp(contentVideoFrame);
@@ -230,7 +257,7 @@ int VideoFileInstance::startOverlaying(){
                 
             }
             
-
+            
             if(encode_success){
                 encodedPacket.stream_index = VIDEO_STREAM_INDEX;
                 
@@ -245,10 +272,10 @@ int VideoFileInstance::startOverlaying(){
                 if(ret < 0){
                     av_log(NULL,AV_LOG_ERROR , "Error writing  a frame to container...");
                 }
-
+                
             }else{
                 //av_log(NULL,AV_LOG_ERROR , "Error encoding a frame");
-
+                
             }
             
             
@@ -265,11 +292,11 @@ int VideoFileInstance::startOverlaying(){
             av_frame_free(&contentVideoFinalYUV);
             
             av_free_packet(&encodedPacket);
-
+            
         }else{
             av_frame_free(&contentVideoFrame);
         }
-
+        
         av_free_packet(&packet);
     }
     
@@ -289,6 +316,14 @@ int VideoFileInstance::startDecoding() {
     int frame_decoded = 0;
     int stream_index;
     int encode_success;
+    int frameEncodedCount = 0;
+    
+    //pts should be multiple of 1/fps / timebase
+    //eg fps = 24 and timebase is 1/48 then pts should be 2,4,6 etc
+    double frameRate = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->r_frame_rate.num/ifmt_ctx->streams[VIDEO_STREAM_INDEX]->r_frame_rate.den;
+    double timebase = (double)ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->time_base.num / (double)ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->time_base.den;
+    
+    double ptsFactor =  1 /(frameRate * timebase) ;
     while(1) {
         
         ret = av_read_frame(ifmt_ctx, &packet);
@@ -332,7 +367,8 @@ int VideoFileInstance::startDecoding() {
             
             
             frame->pts = av_frame_get_best_effort_timestamp(frame);
-            yuvFrame->pts = frame->pts;
+            yuvFrame->pts = ptsFactor*frameEncodedCount ;
+            frameEncodedCount++;
             
             av_init_packet(&encoded_packet);
             
@@ -428,7 +464,7 @@ int VideoFileInstance::getSingleFrame(AVFrame **frame) {
             printf("could not decode a packet....trying next packet");
             continue;
         }
-
+        
         if(frameDecoded){
             //at this point frame points to a decoded frame so
             //job done for this function
@@ -465,7 +501,7 @@ int VideoFileInstance::convertToRGBFrame(AVFrame **yuvframe,AVFrame **rgbPictInf
         
     }
     
-
+    
     // call av_freep(rgbPictInfo->data) to free memory
     
     av_image_alloc( (*rgbPictInfo)->data,   //data to be filled
@@ -475,10 +511,10 @@ int VideoFileInstance::convertToRGBFrame(AVFrame **yuvframe,AVFrame **rgbPictInf
                    32                       //aling
                    );
     
-
+    
     
     ret = sws_scale(imgConvertCtxYUVToRGB, (*yuvframe)->data, (*yuvframe)->linesize, 0, height,
-              (*rgbPictInfo)->data, (*rgbPictInfo)->linesize);
+                    (*rgbPictInfo)->data, (*rgbPictInfo)->linesize);
     
     
     return ret;
@@ -488,7 +524,7 @@ int VideoFileInstance::convertToYuvFrame (AVFrame **rgbFrame , AVFrame ** yuvFra
     int ret = 0;
     int width = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->width;
     int height = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->height;
-
+    
     if(imgConvertCtxRGBToYUV == NULL) {
         imgConvertCtxRGBToYUV = sws_getContext(width, height, PIX_FMT_RGB24, width, height, PIX_FMT_YUV420P, SWS_FAST_BILINEAR, 0, 0, 0);
         
@@ -498,7 +534,7 @@ int VideoFileInstance::convertToYuvFrame (AVFrame **rgbFrame , AVFrame ** yuvFra
         }
     }
     
-   
+    
     av_image_alloc( (*yuvFrame)->data,   //data to be filled
                    (*yuvFrame)->linesize, //line sizes to be filled
                    width, height,
@@ -509,7 +545,7 @@ int VideoFileInstance::convertToYuvFrame (AVFrame **rgbFrame , AVFrame ** yuvFra
     sws_scale(imgConvertCtxRGBToYUV,(*rgbFrame)->data , (*rgbFrame)->linesize, 0, height,
               (*yuvFrame)->data , (*yuvFrame)->linesize);
     
-
+    
     
     return ret;
 }
@@ -523,12 +559,12 @@ int VideoFileInstance::openFile() {
     }
     
     //setting the member variable
-
+    
     if ((ret = avformat_find_stream_info(ifmt_ctx, NULL)) < 0) {
         av_log(NULL, AV_LOG_ERROR, "Cannot find stream information\n");
         return ret;
     }
-
+    
     av_dump_format(ifmt_ctx, 0, fileName, 0);
     int i;
     for (i = 0; i < ifmt_ctx->nb_streams; i++) {
@@ -548,10 +584,10 @@ int VideoFileInstance::openFile() {
             }
         }
     }
-
+    
     
     return 0;
-
+    
 }
 
 
@@ -579,8 +615,11 @@ int main(int argc, char **argv) {
     
     animationFileInstance = new VideoFileInstance(2,"/Users/apple/temp/kinetic_small.mp4");
     
-    contentVideo->startOverlaying();
+    //    contentVideo->startOverlaying();
+    //    
+    //    contentVideo->cleanup();
+    //    animationFileInstance->cleanup();
     
-    //contentVideo->startDecoding();
-
+    contentVideo->startDecoding();
+    
 }
