@@ -28,7 +28,7 @@ typedef struct OutputStream {
     
 }OutputStream;
 
-int open_input_file(const char *filename,InputStream *input_stream);
+int open_input_file(const char *filename,AVFormatContext ** ifmt_ctx);
 
 int open_outputfile(const char *filename,OutputStream *out_stream,enum AVCodecID video_codec_id,
                     enum AVCodecID audio_codec_id,int video_width,int video_height,std::map<std::string,boost::any> options);
@@ -47,3 +47,10 @@ void open_audio(AVFormatContext *oc, AVCodec *codec, AVDictionary *opt_arg);
  @param destFrame - rgb24 frame to which pixels needs to be copied.
  */
 int copyVideoPixels(AVFrame **srcFrame, AVFrame **destFrame , int srcHeight , int srcWidth, int dstHeight,int destWidth);
+
+/**
+ here the srcFrame is RGBA
+ @param srcFrame - rgba frame from which pixels need to be copy.
+ @param destFrame - rgb24 frame to which pixels needs to be copied.
+ */
+int copyVideoPixelsRGBA(AVFrame **srcFrame, AVFrame **destFrame , int srcHeight , int srcWidth, int dstHeight,int destWidth);

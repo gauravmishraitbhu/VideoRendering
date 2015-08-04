@@ -34,6 +34,7 @@ extern "C"{
 #include <string>
 #include <map>
 #include <boost/any.hpp>
+#include "ImageSequence.h"
 
 using namespace std;
 
@@ -99,6 +100,7 @@ private:
 };
 
 
+ImageSequence *imageSequence;
 VideoFileInstance *animationFileInstance;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -154,7 +156,16 @@ int VideoFileInstance::startOverlaying(){
     AVFrame *animationVideoFrame , *animationVideoRGB;
     int frameDecoded = 0,stream_index = 0,encode_success;
     int frame_decoded = 0;
+    
+    //pts should be multiple of 1/fps / timebase
+    //eg fps = 24 and timebase is 1/48 then pts should be 2,4,6 etc
+    double frameRate = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->r_frame_rate.num/ifmt_ctx->streams[VIDEO_STREAM_INDEX]->r_frame_rate.den;
+    double timebase = (double)ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->time_base.num / (double)ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->time_base.den;
+    
+    double ptsFactor =  1 /(frameRate * timebase) ;
+    
     int64_t pts ;
+    int frameEncodedCount=0;
     
     while(1){
         
@@ -217,24 +228,49 @@ int VideoFileInstance::startOverlaying(){
             //convert the frame to rgb
             convertToRGBFrame(&contentVideoFrame, &contentVideoRGB);
             
-            //get a frame from animation video.
-            animationFileInstance->getSingleFrame(&animationVideoFrame);
-            
-            //convert the animation frame to rgb.
-            animationFileInstance->convertToRGBFrame( &animationVideoFrame, &animationVideoRGB);
-            
-            
-            
-            //now copy the pixels from animation frame to content frame.
-            int animationFrameHeight = animationFileInstance->getVideoHeight();
-            int animationFrameWidth = animationFileInstance->getVideoWidth();
             int contentFrameHeight = this->getVideoHeight();
             int contentFrameWidth = this->getVideoWidth();
             
-            copyVideoPixels(&animationVideoRGB ,
-                            &contentVideoRGB,
-                            animationFrameHeight , animationFrameWidth,
-                            contentFrameHeight , contentFrameWidth);
+            //TODO::find a better way to do this. ie to switch between
+            // overlaying a videofile or image sequence
+           
+            if(animationFileInstance != NULL){
+                //get a frame from animation video.
+                animationFileInstance->getSingleFrame(&animationVideoFrame);
+                
+                //convert the animation frame to rgb.
+                animationFileInstance->convertToRGBFrame( &animationVideoFrame, &animationVideoRGB);
+                
+                
+                
+                //now copy the pixels from animation frame to content frame.
+                int animationFrameHeight = animationFileInstance->getVideoHeight();
+                int animationFrameWidth = animationFileInstance->getVideoWidth();
+               
+                
+                copyVideoPixels(&animationVideoRGB ,
+                                &contentVideoRGB,
+                                animationFrameHeight , animationFrameWidth,
+                                contentFrameHeight , contentFrameWidth);
+            }else{
+                
+                AVFrame * imageFrame = imageSequence->getFrame(timebase,ptsFactor,frameEncodedCount+1);
+                
+                if(imageFrame != NULL){
+                    int animationFrameHeight = imageSequence->getVideoHeight();
+                    int animationFrameWidth = imageSequence->getVideoWidth();
+                    
+                    copyVideoPixelsRGBA(&imageFrame ,
+                                        &contentVideoRGB,
+                                        animationFrameHeight , animationFrameWidth,
+                                        contentFrameHeight , contentFrameWidth);
+                }
+                
+               
+                
+            }
+            
+            
             
             
             
@@ -242,8 +278,9 @@ int VideoFileInstance::startOverlaying(){
             convertToYuvFrame(&contentVideoRGB, &contentVideoFinalYUV);
             
             
-            contentVideoFinalYUV->pts = pts;
-            
+            contentVideoFinalYUV->pts = ptsFactor*frameEncodedCount ;
+            frameEncodedCount++;
+            //av_log(NULL,AV_LOG_INFO,"frame numer %d",frameEncodedCount);
             //encode the packet
             av_init_packet(&encodedPacket);
             encode_success = 0;
@@ -612,14 +649,19 @@ int main(int argc, char **argv) {
     
     
     VideoFileInstance *contentVideo = new VideoFileInstance(1,"/Users/apple/temp/small_no_audio.mp4");
+    imageSequence  = new ImageSequence("/Users/apple/phantomjs/examples/frames/",11);
+    //imageSequence->getFrame(0);
     
-    animationFileInstance = new VideoFileInstance(2,"/Users/apple/temp/kinetic_small.mp4");
+   // animationFileInstance = new VideoFileInstance(2,"/Users/apple/temp/kinetic_small.mp4");
     
-    //    contentVideo->startOverlaying();
-    //    
-    //    contentVideo->cleanup();
-    //    animationFileInstance->cleanup();
+        contentVideo->startOverlaying();
+        
+        contentVideo->cleanup();
+        //animationFileInstance->cleanup();
     
-    contentVideo->startDecoding();
+    //contentVideo->startDecoding();
+    
+    
+    
     
 }

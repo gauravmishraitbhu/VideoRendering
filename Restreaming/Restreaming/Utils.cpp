@@ -26,28 +26,28 @@ using namespace std;
 
 
 
-int open_input_file(const char *filename,InputStream *input_stream)
+int open_input_file(const char *filename,AVFormatContext **ifmt_ctx)
 {
     int ret;
     unsigned int i;
     
-    AVFormatContext *ifmt_ctx = NULL;
-    if ((ret = avformat_open_input(&ifmt_ctx, filename, NULL, NULL)) < 0) {
+    
+    if ((ret = avformat_open_input(ifmt_ctx, filename, NULL, NULL)) < 0) {
         av_log(NULL, AV_LOG_ERROR, "Cannot open input file\n");
         return ret;
     }
     
     //setting the member variable
-    input_stream->format_ctx = ifmt_ctx;
-    if ((ret = avformat_find_stream_info(ifmt_ctx, NULL)) < 0) {
+    
+    if ((ret = avformat_find_stream_info(*ifmt_ctx, NULL)) < 0) {
         av_log(NULL, AV_LOG_ERROR, "Cannot find stream information\n");
         return ret;
     }
     
-    for (i = 0; i < ifmt_ctx->nb_streams; i++) {
+    for (i = 0; i < (*ifmt_ctx)->nb_streams; i++) {
         AVStream *stream;
         AVCodecContext *codec_ctx;
-        stream = ifmt_ctx->streams[i];
+        stream = (*ifmt_ctx)->streams[i];
         codec_ctx = stream->codec;
         /* Reencode video & audio and remux subtitles etc. */
         if (codec_ctx->codec_type == AVMEDIA_TYPE_VIDEO
@@ -62,8 +62,8 @@ int open_input_file(const char *filename,InputStream *input_stream)
         }
     }
     
-    input_stream->output_fmt = ifmt_ctx->oformat;
-    av_dump_format(ifmt_ctx, 0, filename, 0);
+    
+    av_dump_format(*ifmt_ctx, 0, filename, 0);
     return 0;
 }
 
@@ -292,6 +292,63 @@ void open_audio(AVFormatContext *oc, AVCodec *codec, AVDictionary *opt_arg)
     //    }
 }
 
+
+int copyVideoPixelsRGBA(AVFrame **fromFrame, AVFrame **destFrame, int srcHeight , int srcWidth,int dstHeight,int dstWidth) {
+    int ret=0;
+    
+    uint8_t srcPixelRed , srcPixelGreen , srcPixelBlue;
+    
+    float srcPixelAlpha;
+    
+     uint8_t dstPixelRed , dstPixelGreen , dstPixelBlue;
+    int srcRow=0 , srcCol=0 ;   //srcRow from 0 to height
+    int dstRow = 0,dstCol = 0 ;
+    int startRow=0 , startCol = 0; //starting coordinates in content frame where
+    
+    int srcLinesize=0,destLinesize=0;
+    srcLinesize = (*fromFrame)->linesize[0];
+    destLinesize = (*destFrame)->linesize[0];
+    
+    
+    uint8_t resultRed , resultGreen , resultBlue;
+    
+    for (srcRow = 0 ;srcRow < srcHeight ; srcRow++){
+        for (srcCol = 0 ; srcCol < srcWidth ; srcCol++){
+            dstRow = srcRow + startRow;
+            dstCol = srcCol + startCol;
+            
+            if(dstRow > dstHeight || dstCol > dstWidth){
+                continue;
+            }
+            
+            srcPixelRed = (*fromFrame)->data[0][srcRow * srcLinesize + 4*srcCol];
+            srcPixelGreen = (*fromFrame)->data[0][srcRow * srcLinesize + 4*srcCol + 1];
+            srcPixelBlue = (*fromFrame)->data[0][srcRow * srcLinesize + 4*srcCol + 2];
+            srcPixelAlpha = float( (*fromFrame)->data[0][srcRow * srcLinesize + 4*srcCol + 3]);
+            srcPixelAlpha = srcPixelAlpha / 255;
+            
+            if(srcPixelAlpha != 0){
+               // av_log(NULL,AV_LOG_INFO,"go non zero");
+            }
+            
+            dstPixelRed = (*destFrame)->data[0][dstRow * destLinesize + 3*dstCol];
+            dstPixelGreen = (*destFrame)->data[0][dstRow * destLinesize + 3*dstCol + 1];
+            dstPixelBlue = (*destFrame)->data[0][dstRow * destLinesize + 3*dstCol + 2];
+            
+            resultRed = srcPixelRed * srcPixelAlpha + dstPixelRed * (1-srcPixelAlpha);
+            resultGreen = srcPixelGreen * srcPixelAlpha + dstPixelGreen * (1-srcPixelAlpha);
+            resultBlue = srcPixelBlue * srcPixelAlpha + dstPixelBlue * (1-srcPixelBlue);
+            
+            (*destFrame)->data[0][dstRow * destLinesize + 3*dstCol] = resultRed;
+            (*destFrame)->data[0][dstRow * destLinesize + 3*dstCol + 1] = resultGreen;
+            (*destFrame)->data[0][dstRow * destLinesize + 3*dstCol + 2] = resultBlue;
+            
+        }
+    }
+    
+    return ret;
+    
+}
 
 
 int copyVideoPixels (AVFrame **fromFrame, AVFrame **destFrame, int srcHeight , int srcWidth,int dstHeight,int dstWidth){

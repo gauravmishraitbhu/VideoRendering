@@ -19,6 +19,7 @@
 		180984DC19FFAE87006F923E /* libswscale.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 180984DB19FFAE87006F923E /* libswscale.a */; };
 		180984DF19FFB422006F923E /* mine.c in Sources */ = {isa = PBXBuildFile; fileRef = 180984DD19FFB422006F923E /* mine.c */; };
 		181C90EB1A0BC75D00DCBCD5 /* transcoding.c in Sources */ = {isa = PBXBuildFile; fileRef = 181C90E91A0BC75D00DCBCD5 /* transcoding.c */; };
+		18391DD31B6F6BE400C517F1 /* ImageSequence.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 18391DD11B6F6BE400C517F1 /* ImageSequence.cpp */; };
 		1849787A1A276A0400FC84AA /* complex_filter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 184978781A276A0400FC84AA /* complex_filter.cpp */; };
 		18C576901A122F6E00ED6C94 /* myLib.c in Sources */ = {isa = PBXBuildFile; fileRef = 18C5768E1A122F6E00ED6C94 /* myLib.c */; };
 		18DF881B1A1F7A2C000C8155 /* libavfilter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 18DF881A1A1F7A2C000C8155 /* libavfilter.a */; };
@@ -59,6 +60,8 @@
 		1818A2B31A445D9700C69467 /* libavcodec.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libavcodec.xcodeproj; path = ../../../../ffmpeg/libavcodec/libavcodec.xcodeproj; sourceTree = "<group>"; };
 		181C90E91A0BC75D00DCBCD5 /* transcoding.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = transcoding.c; sourceTree = "<group>"; };
 		181C90EA1A0BC75D00DCBCD5 /* transcoding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = transcoding.h; sourceTree = "<group>"; };
+		18391DD11B6F6BE400C517F1 /* ImageSequence.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ImageSequence.cpp; sourceTree = "<group>"; };
+		18391DD21B6F6BE400C517F1 /* ImageSequence.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageSequence.h; sourceTree = "<group>"; };
 		184978781A276A0400FC84AA /* complex_filter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = complex_filter.cpp; sourceTree = "<group>"; };
 		184978791A276A0400FC84AA /* complex_filter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = complex_filter.h; sourceTree = "<group>"; };
 		18C5768E1A122F6E00ED6C94 /* myLib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = myLib.c; sourceTree = "<group>"; };
@@ -139,6 +142,8 @@
 				18E24E531B5D99AA00859ED3 /* transcoding_1.h */,
 				18E24E5C1B61969500859ED3 /* Utils.cpp */,
 				18E24E5D1B61969500859ED3 /* Utils.h */,
+				18391DD11B6F6BE400C517F1 /* ImageSequence.cpp */,
+				18391DD21B6F6BE400C517F1 /* ImageSequence.h */,
 			);
 			path = Restreaming;
 			sourceTree = "<group>";
@@ -216,6 +221,7 @@
 				180984DF19FFB422006F923E /* mine.c in Sources */,
 				180984D819FFADAD006F923E /* muxing.c in Sources */,
 				18E24E5E1B61969500859ED3 /* Utils.cpp in Sources */,
+				18391DD31B6F6BE400C517F1 /* ImageSequence.cpp in Sources */,
 				18C576901A122F6E00ED6C94 /* myLib.c in Sources */,
 				1849787A1A276A0400FC84AA /* complex_filter.cpp in Sources */,
 				180984C119FE6F84006F923E /* main.c in Sources */,
