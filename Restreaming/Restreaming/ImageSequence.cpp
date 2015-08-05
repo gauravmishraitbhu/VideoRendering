@@ -9,13 +9,14 @@
 #include "ImageSequence.h"
 #include "Utils.h"
 
-ImageSequence::ImageSequence(const char *fileName,int initialFile){
+ImageSequence::ImageSequence(const char *fileName,int initialFile,float offsetTime){
     this->baseFileName = fileName;
     this->intitialFileSeqCnt = initialFile;
     
     currentFrameNum = -1;
     fps = 12;
     maxNumofFrames = 120;
+    this->offsetTime = offsetTime;
     
 }
 
@@ -166,6 +167,12 @@ int ImageSequence::calculateNextFrameNumber(float contentVideoTimeBase ,float pt
     }
     
     float wallClockTimeContentVideo = contentVideoTimeBase * contentVideoPts * ptsFactor;
+    
+    //if animation video is supposed to be delayed by some time then the above time needs to be
+    //adjusted by subtracting the offset time eg if offset is 5 sec and absolute walltime comes
+    //out to be 6 secs then we need to show the frame which is supposed to be at t=1 secs
+    
+    wallClockTimeContentVideo = wallClockTimeContentVideo - offsetTime;
     
     //the time till which current frame needs to be displayed
     float wallClockTimeForCurrentAnimationFrame = float(1/(float)fps) * currentFrameNum;

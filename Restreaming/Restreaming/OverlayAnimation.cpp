@@ -100,6 +100,8 @@ private:
 };
 
 
+int animatonTimeOffset = 5;
+
 ImageSequence *imageSequence;
 VideoFileInstance *animationFileInstance;
 
@@ -231,44 +233,52 @@ int VideoFileInstance::startOverlaying(){
             int contentFrameHeight = this->getVideoHeight();
             int contentFrameWidth = this->getVideoWidth();
             
-            //TODO::find a better way to do this. ie to switch between
-            // overlaying a videofile or image sequence
-           
-            if(animationFileInstance != NULL){
-                //get a frame from animation video.
-                animationFileInstance->getSingleFrame(&animationVideoFrame);
+            float wallClockTimeContentVideo = timebase * (frameEncodedCount+1) * ptsFactor;
+            
+            if(wallClockTimeContentVideo > animatonTimeOffset){
                 
-                //convert the animation frame to rgb.
-                animationFileInstance->convertToRGBFrame( &animationVideoFrame, &animationVideoRGB);
+                //TODO::find a better way to do this. ie to switch between
+                // overlaying a videofile or image sequence
                 
-                
-                
-                //now copy the pixels from animation frame to content frame.
-                int animationFrameHeight = animationFileInstance->getVideoHeight();
-                int animationFrameWidth = animationFileInstance->getVideoWidth();
-               
-                
-                copyVideoPixels(&animationVideoRGB ,
-                                &contentVideoRGB,
-                                animationFrameHeight , animationFrameWidth,
-                                contentFrameHeight , contentFrameWidth);
-            }else{
-                
-                AVFrame * imageFrame = imageSequence->getFrame(timebase,ptsFactor,frameEncodedCount+1);
-                
-                if(imageFrame != NULL){
-                    int animationFrameHeight = imageSequence->getVideoHeight();
-                    int animationFrameWidth = imageSequence->getVideoWidth();
+                if(animationFileInstance != NULL){
+                    //get a frame from animation video.
+                    animationFileInstance->getSingleFrame(&animationVideoFrame);
                     
-                    copyVideoPixelsRGBA(&imageFrame ,
-                                        &contentVideoRGB,
-                                        animationFrameHeight , animationFrameWidth,
-                                        contentFrameHeight , contentFrameWidth);
-                }
+                    //convert the animation frame to rgb.
+                    animationFileInstance->convertToRGBFrame( &animationVideoFrame, &animationVideoRGB);
+                    
+                    
+                    
+                    //now copy the pixels from animation frame to content frame.
+                    int animationFrameHeight = animationFileInstance->getVideoHeight();
+                    int animationFrameWidth = animationFileInstance->getVideoWidth();
+                    
+                    
+                    copyVideoPixels(&animationVideoRGB ,
+                                    &contentVideoRGB,
+                                    animationFrameHeight , animationFrameWidth,
+                                    contentFrameHeight , contentFrameWidth);
+                }else{
+                    
+                    AVFrame * imageFrame = imageSequence->getFrame(timebase,ptsFactor,frameEncodedCount+1);
+                    
+                    if(imageFrame != NULL){
+                        int animationFrameHeight = imageSequence->getVideoHeight();
+                        int animationFrameWidth = imageSequence->getVideoWidth();
+                        
+                        copyVideoPixelsRGBA(&imageFrame ,
+                                            &contentVideoRGB,
+                                            animationFrameHeight , animationFrameWidth,
+                                            contentFrameHeight , contentFrameWidth);
+                    }
+
                 
+                }
+            
+            
                
                 
-            }
+            }//end if(frame_decoded)
             
             
             
@@ -649,7 +659,7 @@ int main(int argc, char **argv) {
     
     
     VideoFileInstance *contentVideo = new VideoFileInstance(1,"/Users/apple/temp/small_no_audio.mp4");
-    imageSequence  = new ImageSequence("/Users/apple/phantomjs/examples/frames/",11);
+    imageSequence  = new ImageSequence("/Users/apple/phantomjs/examples/frames/",11,animatonTimeOffset);
     //imageSequence->getFrame(0);
     
    // animationFileInstance = new VideoFileInstance(2,"/Users/apple/temp/kinetic_small.mp4");

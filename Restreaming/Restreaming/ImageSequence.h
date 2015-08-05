@@ -26,7 +26,7 @@ extern "C"{
 class ImageSequence{
     
 public:
-    ImageSequence(char const *,int initialFile);
+    ImageSequence(char const *,int initialFile,float offsetTime);
     
     /**
         returns pointer to next frame in sequence.
@@ -45,6 +45,9 @@ private:
     
     //file name suffix. fo eg the folder contains img11.png img12.png then this count should be 11.
     int intitialFileSeqCnt = 11;
+    
+    //time after which animation video will start on content video timeline. 0 both video will start at same time
+    float offsetTime = 0;
     
     /**
      fps of the animation sequence. ie how many images represent 1 sec worth of animation.
