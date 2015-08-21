@@ -41,7 +41,7 @@ private:
     int currentFrameNum=0;
     
     //should be read from some meta file
-    int maxNumofFrames = 48;
+    int maxNumofFrames = 240;
     
     //file name suffix. fo eg the folder contains img11.png img12.png then this count should be 11.
     int intitialFileSeqCnt = 11;

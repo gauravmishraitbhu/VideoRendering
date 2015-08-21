@@ -31,12 +31,38 @@ typedef struct OutputStream {
 int open_input_file(const char *filename,AVFormatContext ** ifmt_ctx);
 
 int open_outputfile(const char *filename,OutputStream *out_stream,enum AVCodecID video_codec_id,
-                    enum AVCodecID audio_codec_id,int video_width,int video_height,std::map<std::string,boost::any> options);
+                    AVCodecContext *inputAudioCodec,int video_width,int video_height,std::map<std::string,boost::any> options);
 
+
+/**
+ adds a single stream to a container using the codec id provided
+ @param oc - output format context
+ @param codec - the reference to codec.
+ @param codec_id - requested codec id
+ */
 void add_stream(AVFormatContext *oc,
                 AVCodec **codec,
                 enum AVCodecID codec_id,
                 int codecWidth,int codecHeight,std::map<std::string,boost::any> options);
+
+
+/**
+ same function as add_stream with only difference being the stream is created with exact same settings as 
+ the input codec.
+ 
+ */
+
+int add_stream_from_codec(AVFormatContext *oc,
+                          AVCodec **codec,
+                          AVCodecContext *inputCodec,
+                          int width,int height,
+                          std::map<std::string,boost::any> options);
+
+
+/**
+ creates a file with the codecs and codec settings copied from the input params.
+ */
+int open_outputfile_copy_codecs(const char *filename, OutputStream *outputStream,AVCodecContext *videoCodec , AVCodecContext *audioCodecCtx);
 
 void open_video(AVFormatContext *oc, AVCodec *codec, AVDictionary *opt_arg);
 

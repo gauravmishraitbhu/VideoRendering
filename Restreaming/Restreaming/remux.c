@@ -59,8 +59,8 @@
 ////        return 1;
 ////    }
 //    
-//    in_filename  = "rtmp://localhost:1935/vod/sample.mp4";
-//    out_filename = "rtmp://localhost:1935/live/myStream";
+//    in_filename  = "/Users/apple/temp/sample_1080p_with_audio.mp4";
+//    out_filename = "/Users/apple/temp/small_remux.mp4";
 //    
 //    av_register_all();
 //    avformat_network_init();
@@ -77,7 +77,7 @@
 //    
 //    av_dump_format(ifmt_ctx, 0, in_filename, 0);
 //    
-//    avformat_alloc_output_context2(&ofmt_ctx, NULL, "FLV", out_filename);
+//    avformat_alloc_output_context2(&ofmt_ctx, NULL, NULL, out_filename);
 //    if (!ofmt_ctx) {
 //        fprintf(stderr, "Could not create output context\n");
 //        ret = AVERROR_UNKNOWN;

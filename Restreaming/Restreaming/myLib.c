@@ -163,6 +163,7 @@ void add_stream(AVFormatContext *oc,
             (*codec)->sample_fmts[0] : AV_SAMPLE_FMT_FLTP;
             c->bit_rate    = 64000;
             c->sample_rate = 44100;
+            //c->frame_size =
             if ((*codec)->supported_samplerates) {
                 c->sample_rate = (*codec)->supported_samplerates[0];
                 for (i = 0; (*codec)->supported_samplerates[i]; i++) {

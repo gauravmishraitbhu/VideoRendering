@@ -84,7 +84,7 @@ AVFrame * ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,i
         
         std::string completeName = std::string(baseFileName) + std::string("frame")+std::to_string(currSeq) + std::string(".png");
         openFile(completeName.c_str());
-        //openFile("/Users/apple/temp/abc.png");
+        //openFile("/Users/apple/temp/frame11.png");
         
         AVPacket packet;
         
