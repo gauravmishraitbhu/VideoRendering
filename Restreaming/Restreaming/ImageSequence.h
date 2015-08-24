@@ -54,6 +54,8 @@ private:
      */
     int fps;
     
+    int height,width;
+    
     const char *baseFileName;
     AVFrame *currFrame = NULL;
     AVFormatContext *ifmt_ctx = NULL;
@@ -62,6 +64,6 @@ private:
     
     int calculateNextFrameNumber(float contentVideoTimeBase , float ptsFactor,int contentVideoPts);
     
-
+    void closeFile();
     
 };

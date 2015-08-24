@@ -391,38 +391,12 @@ void open_audio(AVFormatContext *oc, AVCodec *codec, AVDictionary *opt_arg)
         exit(1);
     }
     
-    /* init signal generator */
-    // stream->t     = 0;
-    // ost->tincr = 2 * M_PI * 110.0 / c->sample_rate;
-    /* increment frequency by 110 Hz per second */
-    // ost->tincr2 = 2 * M_PI * 110.0 / c->sample_rate / c->sample_rate;
-    
     if (c->codec->capabilities & CODEC_CAP_VARIABLE_FRAME_SIZE)
         nb_samples = 10000;
     else
         nb_samples = c->frame_size;
     
-    /* create resampler context */
-    //    swr_ctx = swr_alloc();
-    //    if (!swr_ctx) {
-    //        fprintf(stderr, "Could not allocate resampler context\n");
-    //        exit(1);
-    //    }
-    //
-    //    /* set options */
-    //    av_opt_set_int       (swr_ctx, "in_channel_count",   c->channels,       0);
-    //    av_opt_set_int       (swr_ctx, "in_sample_rate",     c->sample_rate,    0);
-    //    av_opt_set_sample_fmt(swr_ctx, "in_sample_fmt",      AV_SAMPLE_FMT_S16, 0);
-    //    av_opt_set_int       (swr_ctx, "out_channel_count",  c->channels,       0);
-    //    av_opt_set_int       (swr_ctx, "out_sample_rate",    c->sample_rate,    0);
-    //    av_opt_set_sample_fmt(swr_ctx, "out_sample_fmt",     c->sample_fmt,     0);
-    //
-    //    /* initialize the resampling context */
-    //    if ((ret = swr_init(swr_ctx)) < 0) {
-    //        fprintf(stderr, "Failed to initialize the resampling context\n");
-    //        exit(1);
-    //    }
-}
+    }
 
 
 int copyVideoPixelsRGBA(AVFrame **fromFrame, AVFrame **destFrame, int srcHeight , int srcWidth,int dstHeight,int dstWidth) {
@@ -458,9 +432,6 @@ int copyVideoPixelsRGBA(AVFrame **fromFrame, AVFrame **destFrame, int srcHeight 
             srcPixelGreen = (*fromFrame)->data[0][srcRow * srcLinesize + 4*srcCol + 1];
             srcPixelBlue = (*fromFrame)->data[0][srcRow * srcLinesize + 4*srcCol + 2];
             
-            if(srcPixelAlpha != 0){
-                //av_log(NULL,AV_LOG_INFO,"go non zero");
-            }
             
 //            if(srcPixelRed == 255 && srcPixelGreen == 255 && srcPixelBlue == 255){
 //                continue;

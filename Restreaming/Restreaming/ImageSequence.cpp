@@ -20,13 +20,21 @@ ImageSequence::ImageSequence(const char *fileName,int initialFile,float offsetTi
     
 }
 
+void ImageSequence::closeFile(){
+    
+    if(ifmt_ctx != NULL){
+        avcodec_close(ifmt_ctx->streams[0]->codec);
+        
+        avformat_close_input(&ifmt_ctx);
+        ifmt_ctx = NULL;
+    }
+}
+
 void ImageSequence::openFile(const char *fileName){
     int ret;
     unsigned int i;
     
-    if(ifmt_ctx != NULL){
-        avformat_close_input(&ifmt_ctx);
-    }
+   
     
     
     if ((ret = avformat_open_input(&ifmt_ctx, fileName, NULL, NULL)) < 0) {
@@ -52,12 +60,16 @@ void ImageSequence::openFile(const char *fileName){
             codec_ctx->thread_count = 1; // this is required for some reason
             ret = avcodec_open2(codec_ctx,
                                 avcodec_find_decoder(codec_ctx->codec_id), NULL);
+            
+            height = codec_ctx->height;
+            width = codec_ctx->width;
             if (ret < 0) {
                 av_log(NULL, AV_LOG_ERROR, "Failed to open decoder for stream #%u\n", i);
                 //return ret;
             }
         }
     }
+    
     
     
     //av_dump_format(ifmt_ctx, 0, fileName, 0);
@@ -157,6 +169,8 @@ AVFrame * ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,i
     
     } //end of if (nextFrame>currFrame)
     
+    closeFile();
+    
     return currFrame;
 }
 
@@ -187,9 +201,9 @@ int ImageSequence::calculateNextFrameNumber(float contentVideoTimeBase ,float pt
 }
 
 int ImageSequence::getVideoHeight() {
-    return ifmt_ctx->streams[0]->codec->coded_height;
+    return height;
 }
 
 int ImageSequence::getVideoWidth() {
-    return ifmt_ctx->streams[0]->codec->coded_width;
+    return width;
 }

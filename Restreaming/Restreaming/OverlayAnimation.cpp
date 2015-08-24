@@ -16,11 +16,11 @@ extern "C"{
 #include <libavfilter/buffersink.h>
 #include <libavfilter/buffersrc.h>
 #include <libavutil/timestamp.h>
-    #include <libavutil/mathematics.h>
+#include <libavutil/mathematics.h>
 #include <libavutil/opt.h>
 #include <libavutil/imgutils.h>
-
-
+    
+    
 #include <libavutil/samplefmt.h>
 #include <libswscale/swscale.h>
     
@@ -30,7 +30,7 @@ extern "C"{
 #include <libavutil/pixdesc.h>
     
 #include <libavutil/time.h>
-
+    
 }
 
 #include "Utils.h"
@@ -103,6 +103,7 @@ private:
     int convertToRGBFrame(AVFrame **,AVFrame **);
     int convertToYuvFrame(AVFrame ** , AVFrame **);
     
+    int processAudioPacket(AVPacket * , AVStream *, AVStream *);
     
     
 };
@@ -121,7 +122,7 @@ int VideoFileInstance::cleanup(){
     
     avcodec_close(out_stream.format_ctx->streams[0]->codec);
     avcodec_close(ifmt_ctx->streams[0]->codec);
-
+    
     avformat_close_input(&ifmt_ctx);
     
     
@@ -150,7 +151,7 @@ int VideoFileInstance::openOutputFile() {
     videoOptions["frame_size"] = ifmt_ctx->streams[1]->codec->frame_size;
     videoOptions["audio_bitrate"] = ifmt_ctx->streams[1]->codec->bit_rate;
     videoOptions["audio_sample_rate"] = ifmt_ctx->streams[1]->codec->sample_rate;
-        videoOptions["channel_layout"] = ifmt_ctx->streams[1]->codec->channel_layout;
+    videoOptions["channel_layout"] = ifmt_ctx->streams[1]->codec->channel_layout;
     
     int ret = open_outputfile("/Users/apple/temp/sample_output.mp4",
                               &out_stream , CODEC_ID_H264,
@@ -166,6 +167,25 @@ int VideoFileInstance::openOutputFile() {
 }
 
 
+int VideoFileInstance::processAudioPacket(AVPacket *packet , AVStream *in_stream , AVStream * output_stream){
+    packet->pts = av_rescale_q(packet->pts, in_stream->time_base, output_stream->time_base);
+    packet->dts = av_rescale_q(packet->dts, in_stream->time_base, output_stream->time_base);
+    packet->duration = av_rescale_q(packet->duration, in_stream->time_base, output_stream->time_base);
+    int ret = 0;
+    //packet.pts =
+    //packet.pos = -1;
+    //log_packet(ofmt_ctx, &pkt, "out");
+    //packet.pts = frameCnt ++;
+    ret = av_interleaved_write_frame(out_stream.format_ctx, packet);
+    if (ret < 0) {
+        fprintf(stderr, "Error muxing packet\n");
+        
+    }
+    av_free_packet(packet);
+    
+    return ret;
+}
+
 int VideoFileInstance::startOverlaying(){
     
     if(videoType == VIDEO_TYPE_ANIMATION){
@@ -177,8 +197,8 @@ int VideoFileInstance::startOverlaying(){
     AVPacket packet,encodedPacket;
     AVFrame *contentVideoFrame, *contentVideoRGB , *contentVideoFinalYUV;
     AVFrame *animationVideoFrame , *animationVideoRGB;
-    int frameDecoded = 0,stream_index = 0,encode_success;
-    int numAudioPackets = 0;
+    int stream_index = 0,encode_success;
+
     int frame_decoded = 0;
     
     //pts should be multiple of 1/fps / timebase
@@ -208,23 +228,12 @@ int VideoFileInstance::startOverlaying(){
         
         if(in_stream->codec->codec_type == AVMEDIA_TYPE_AUDIO){
             
+            //for audio packets simply mux them into output container.
+            //no need to decode and encode them.
             output_stream = out_stream.format_ctx->streams[packet.stream_index];
             
-            packet.pts = av_rescale_q(packet.pts, in_stream->time_base, output_stream->time_base);
-            packet.dts = av_rescale_q(packet.dts, in_stream->time_base, output_stream->time_base);
-            packet.duration = av_rescale_q(packet.duration, in_stream->time_base, output_stream->time_base);
             
-            //packet.pts =
-            //packet.pos = -1;
-            //log_packet(ofmt_ctx, &pkt, "out");
-            //packet.pts = frameCnt ++;
-            ret = av_interleaved_write_frame(out_stream.format_ctx, &packet);
-            if (ret < 0) {
-                fprintf(stderr, "Error muxing packet\n");
-                break;
-            }
-            av_free_packet(&packet);
-
+            processAudioPacket(&packet, in_stream, output_stream);
             
             continue;
         }
@@ -318,18 +327,17 @@ int VideoFileInstance::startOverlaying(){
                                             &contentVideoRGB,
                                             animationFrameHeight , animationFrameWidth,
                                             contentFrameHeight , contentFrameWidth);
+                        
+                        //                        av_frame_free(&imageFrame);
                     }
-
-                
+                    
+                    
                 }
-            
-            
-               
                 
-            }//end if(frame_decoded)
-            
-            
-            
+                
+                
+                
+            }
             
             
             //convert the content rgb to yuv
@@ -353,6 +361,8 @@ int VideoFileInstance::startOverlaying(){
             }
             
             
+            
+            // encode the packet and mux it into the container
             if(encode_success){
                 encodedPacket.stream_index = VIDEO_STREAM_INDEX;
                 
@@ -376,12 +386,14 @@ int VideoFileInstance::startOverlaying(){
             
             //cleanup
             av_freep(contentVideoRGB->data);
-            av_frame_free(&contentVideoFrame);
             av_frame_free(&contentVideoRGB);
             
-            av_freep(animationVideoRGB->data);
             av_frame_free(&contentVideoFrame);
-            av_frame_free(&contentVideoRGB);
+
+            
+            av_freep(animationVideoRGB->data);
+            av_frame_free(&animationVideoRGB);
+            
             
             av_freep(contentVideoFinalYUV->data);
             av_frame_free(&contentVideoFinalYUV);
@@ -389,8 +401,12 @@ int VideoFileInstance::startOverlaying(){
             av_free_packet(&encodedPacket);
             
         }else{
+            //frame failed to decode.
+            
+            
             av_frame_free(&contentVideoFrame);
-        }
+            
+        } // end of if(frame_decoded)
         
         av_free_packet(&packet);
     }
@@ -438,22 +454,22 @@ int VideoFileInstance::startDecoding() {
         
         if(in_stream->codec->codec_type == AVMEDIA_TYPE_AUDIO){
             
-//            packet.pts = av_rescale_q_rnd(packet.pts, in_stream->time_base, output_stream->time_base
-//                                          , AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
-//                    packet.dts = av_rescale_q_rnd(packet.dts, in_stream->time_base, output_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
+            //            packet.pts = av_rescale_q_rnd(packet.pts, in_stream->time_base, output_stream->time_base
+            //                                          , AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
+            //                    packet.dts = av_rescale_q_rnd(packet.dts, in_stream->time_base, output_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
             
             
-                    packet.duration = av_rescale_q(packet.duration, in_stream->time_base, output_stream->time_base);
-                    packet.pos = -1;
-                    //log_packet(ofmt_ctx, &pkt, "out");
+            packet.duration = av_rescale_q(packet.duration, in_stream->time_base, output_stream->time_base);
+            packet.pos = -1;
+            //log_packet(ofmt_ctx, &pkt, "out");
             
-                    ret = av_interleaved_write_frame(out_stream.format_ctx, &packet);
-                    if (ret < 0) {
-                        fprintf(stderr, "Error muxing packet\n");
-                        break;
-                    }
-                    av_free_packet(&packet);
-
+            ret = av_interleaved_write_frame(out_stream.format_ctx, &packet);
+            if (ret < 0) {
+                fprintf(stderr, "Error muxing packet\n");
+                break;
+            }
+            av_free_packet(&packet);
+            
             
             
         }else{
@@ -525,7 +541,7 @@ int VideoFileInstance::startDecoding() {
             
             av_free_packet(&packet);
             
-
+            
             
         }
         
@@ -736,12 +752,12 @@ int main(int argc, char **argv) {
     imageSequence  = new ImageSequence("/Users/apple/phantomjs/examples/frames/",11,animatonTimeOffset);
     //imageSequence->getFrame(0);
     
-   // animationFileInstance = new VideoFileInstance(2,"/Users/apple/temp/kinetic_small.mp4");
+    // animationFileInstance = new VideoFileInstance(2,"/Users/apple/temp/kinetic_small.mp4");
     
-        //contentVideo->remux();
-        
+    //contentVideo->remux();
+    
     contentVideo->startOverlaying();
-        //animationFileInstance->cleanup();
+    //animationFileInstance->cleanup();
     
     //contentVideo->startDecoding();
     contentVideo->cleanup();
