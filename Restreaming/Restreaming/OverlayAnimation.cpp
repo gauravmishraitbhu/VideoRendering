@@ -109,7 +109,7 @@ private:
 };
 
 
-int animatonTimeOffset = 5;
+int animatonTimeOffset = 0;
 
 ImageSequence *imageSequence;
 VideoFileInstance *animationFileInstance;
@@ -147,11 +147,13 @@ int VideoFileInstance::openOutputFile() {
     std::map<string,boost::any> videoOptions ;
     videoOptions["bitrate"] = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->bit_rate;
     videoOptions["timebase_denominator"] = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->time_base.den;
+    videoOptions["timebase_numerator"] = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->time_base.num;
     
     videoOptions["frame_size"] = ifmt_ctx->streams[1]->codec->frame_size;
     videoOptions["audio_bitrate"] = ifmt_ctx->streams[1]->codec->bit_rate;
     videoOptions["audio_sample_rate"] = ifmt_ctx->streams[1]->codec->sample_rate;
     videoOptions["channel_layout"] = ifmt_ctx->streams[1]->codec->channel_layout;
+    cout << boost::any_cast<int>(videoOptions["bitrate"]);
     
     int ret = open_outputfile("/Users/apple/temp/sample_output.mp4",
                               &out_stream , CODEC_ID_H264,
@@ -206,7 +208,8 @@ int VideoFileInstance::startOverlaying(){
     double frameRate = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->r_frame_rate.num/ifmt_ctx->streams[VIDEO_STREAM_INDEX]->r_frame_rate.den;
     double timebase = (double)ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->time_base.num / (double)ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->time_base.den;
     
-    double ptsFactor =  1 /(frameRate * timebase) ;
+    double ptsFactorFloat =  1 /(frameRate * timebase) ;
+    double ptsFactor = round(ptsFactorFloat);
     
     int64_t pts ;
     int frameEncodedCount=0;
@@ -434,7 +437,8 @@ int VideoFileInstance::startDecoding() {
     double frameRate = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->r_frame_rate.num/ifmt_ctx->streams[VIDEO_STREAM_INDEX]->r_frame_rate.den;
     double timebase = (double)ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->time_base.num / (double)ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->time_base.den;
     
-    double ptsFactor =  1 /(frameRate * timebase) ;
+    double ptsFactorFloat =  1 /(frameRate * timebase) ;
+    int ptsFactor = round(ptsFactorFloat);
     while(1) {
         
         ret = av_read_frame(ifmt_ctx, &packet);
@@ -748,8 +752,8 @@ int main(int argc, char **argv) {
     avfilter_register_all();
     
     
-    VideoFileInstance *contentVideo = new VideoFileInstance(1,"/Users/apple/temp/sample_1080p_with_audio.mp4");
-    imageSequence  = new ImageSequence("/Users/apple/phantomjs/examples/frames/",11,animatonTimeOffset);
+    VideoFileInstance *contentVideo = new VideoFileInstance(1,"/Users/apple/temp/Before_Vorator-2.mp4");
+    imageSequence  = new ImageSequence("/Users/apple/phantomjs/examples/frames/",1,animatonTimeOffset);
     //imageSequence->getFrame(0);
     
     // animationFileInstance = new VideoFileInstance(2,"/Users/apple/temp/kinetic_small.mp4");

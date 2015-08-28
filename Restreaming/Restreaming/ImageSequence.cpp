@@ -15,7 +15,7 @@ ImageSequence::ImageSequence(const char *fileName,int initialFile,float offsetTi
     
     currentFrameNum = -1;
     fps = 12;
-    maxNumofFrames = 120;
+    maxNumofFrames = 653;
     this->offsetTime = offsetTime;
     
 }

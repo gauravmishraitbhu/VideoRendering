@@ -267,6 +267,7 @@ void add_stream(AVFormatContext *oc,
             /* Resolution must be a multiple of two. */
             c->width    = width ;//ifmt_ctx->streams[0]->codec->width;
             c->height   = height;//ifmt_ctx->streams[0]->codec->height;
+        
             /* timebase: This is the fundamental unit of time (in seconds) in terms
              * of which frame timestamps are represented. For fixed-fps content,
              * timebase should be 1/framerate and timestamp increments should be
@@ -274,7 +275,8 @@ void add_stream(AVFormatContext *oc,
             
             if(options.find("timebase_denominator") != options.end()){
                 int denominator = boost::any_cast<int>(options["timebase_denominator"]);
-                out_stream->time_base = (AVRational) {1,denominator};
+                int numerator = boost::any_cast<int>(options["timebase_numerator"]);
+                out_stream->time_base = (AVRational) {numerator,denominator};
             }else{
                 out_stream->time_base = (AVRational){ 1, 25 };
             }
