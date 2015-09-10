@@ -21,6 +21,7 @@ extern "C"{
 
 
 #include "Utils.h"
+#include "Utils2.h"
 #include <iostream>
 using namespace std;
 
@@ -419,7 +420,7 @@ int copyVideoPixelsRGBA(AVFrame **fromFrame, AVFrame **destFrame, int srcHeight 
     
     
     uint8_t resultRed , resultGreen , resultBlue;
-    float resultRedFloat , resultGreenFloat , resultBlueFloat;
+    
     
     for (srcRow = 0 ;srcRow < srcHeight ; srcRow++){
         for (srcCol = 0 ; srcCol < srcWidth ; srcCol++){

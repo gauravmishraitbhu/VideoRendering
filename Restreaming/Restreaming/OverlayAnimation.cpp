@@ -47,72 +47,9 @@ using namespace std;
 ////////////////////////////////////////CLASS DECLARATION/////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-//Each class instance will represent a video file. either content video or animation video.
-class VideoFileInstance {
-    
-public:
-    VideoFileInstance(int , const char *);
-    int startDecoding();
-    
-    /**
-     reads packet from input format context and decode it to frame.
-     @param frame the frame in which decoded data will be returned.
-     */
-    int getSingleFrame(AVFrame **frame);
-    
-    /**
-     to be called for content video. this will run the main loop of program
-     which will open video frame by frame and overlay respective animation frame
-     on top of animation video.
-     */
-    int startOverlaying();
-    
-    
-    //test function to test out remuxing code
-    int remux();
-    
-    int getVideoHeight() {
-        return ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->height;
-    }
-    
-    int getVideoWidth() {
-        return ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->width;
-    }
-    
-    /**
-     for releasing context and closing codec etc.
-     */
-    int cleanup();
-    
-    
-private:
-    const char *fileName;
-    int VIDEO_STREAM_INDEX = 0;
-    int VIDEO_TYPE_CONTENT = 1 , VIDEO_TYPE_ANIMATION = 2;
-    int videoType; //1 = content video 2 = animation video
-    AVFormatContext *ifmt_ctx = NULL;
-    OutputStream out_stream;
-    struct SwsContext *imgConvertCtxYUVToRGB = NULL;
-    struct SwsContext *imgConvertCtxRGBToYUV = NULL;
-    
-    //for opening file and decoder etc
-    int openFile();
-    //should apply for main video
-    int openOutputFile();
-    
-    int convertToRGBFrame(AVFrame **,AVFrame **);
-    int convertToYuvFrame(AVFrame ** , AVFrame **);
-    
-    int processAudioPacket(AVPacket * , AVStream *, AVStream *);
-    
-    
-};
-
 
 int animatonTimeOffset = 0;
 
-ImageSequence *imageSequence;
-VideoFileInstance *animationFileInstance;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -155,7 +92,7 @@ int VideoFileInstance::openOutputFile() {
     videoOptions["channel_layout"] = ifmt_ctx->streams[1]->codec->channel_layout;
     cout << boost::any_cast<int>(videoOptions["bitrate"]);
     
-    int ret = open_outputfile("/Users/apple/temp/sample_output.mp4",
+    int ret = open_outputfile(outputFilePath,
                               &out_stream , CODEC_ID_H264,
                               ifmt_ctx->streams[1]->codec,
                               ifmt_ctx->streams[0]->codec->width,
@@ -190,6 +127,7 @@ int VideoFileInstance::processAudioPacket(AVPacket *packet , AVStream *in_stream
 
 int VideoFileInstance::startOverlaying(){
     
+    VideoFileInstance *animationFileInstance = NULL;
     if(videoType == VIDEO_TYPE_ANIMATION){
         av_log(NULL,AV_LOG_ERROR,"startOverlaying should not be called on animation video.");
         return -1;
@@ -707,6 +645,8 @@ int VideoFileInstance::openFile() {
     }
     
     av_dump_format(ifmt_ctx, 0, fileName, 0);
+    
+    videoDuration = ifmt_ctx->duration;
     int i;
     for (i = 0; i < ifmt_ctx->nb_streams; i++) {
         AVStream *stream;
@@ -734,10 +674,12 @@ int VideoFileInstance::openFile() {
 
 
 
-VideoFileInstance::VideoFileInstance(int type,const char *filename){
+VideoFileInstance::VideoFileInstance(int type,ImageSequence * imageSeq , const char *filename , const char *outputFile){
     cout<< "creating instance of video file. of type  " << type << "\n";
     this->videoType = type;
     this->fileName = filename;
+    this->imageSequence = imageSeq;
+    this->outputFilePath = outputFile;
     openFile();
     
     if(type == VIDEO_TYPE_CONTENT){
@@ -746,26 +688,3 @@ VideoFileInstance::VideoFileInstance(int type,const char *filename){
     
 }
 
-int main(int argc, char **argv) {
-    av_register_all();
-    avformat_network_init();
-    avfilter_register_all();
-    
-    
-    VideoFileInstance *contentVideo = new VideoFileInstance(1,"/Users/apple/temp/Before_Vorator-2.mp4");
-    imageSequence  = new ImageSequence("/Users/apple/phantomjs/examples/frames/",1,animatonTimeOffset);
-    //imageSequence->getFrame(0);
-    
-    // animationFileInstance = new VideoFileInstance(2,"/Users/apple/temp/kinetic_small.mp4");
-    
-    //contentVideo->remux();
-    
-    contentVideo->startOverlaying();
-    //animationFileInstance->cleanup();
-    
-    //contentVideo->startDecoding();
-    contentVideo->cleanup();
-    
-    return 1;
-    
-}

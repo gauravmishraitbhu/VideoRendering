@@ -9,24 +9,22 @@
 #ifndef __Restreaming__Utils__
 #define __Restreaming__Utils__
 
+
+#endif /* defined(__Restreaming__Utils__) */
+
 #include <stdio.h>
 #include <string>
 #include <map>
 #include <boost/any.hpp>
 
-#endif /* defined(__Restreaming__Utils__) */
+extern "C"{
+#include <libavformat/avformat.h>
+#include <libavfilter/avfilter.h>
+#include <libavfilter/avcodec.h>
+}
 
-//placeholder for input stream datastructure
-typedef struct InputStream{
-    AVFormatContext *format_ctx;
-    AVOutputFormat *output_fmt;
-} InputStream;
+#include "Utils2.h"
 
-//placeholder for output stream datastructure
-typedef struct OutputStream {
-    AVFormatContext *format_ctx;
-    
-}OutputStream;
 
 int open_input_file(const char *filename,AVFormatContext ** ifmt_ctx);
 

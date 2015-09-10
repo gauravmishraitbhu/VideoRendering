@@ -7,15 +7,19 @@
 //
 
 #include "ImageSequence.h"
-#include "Utils.h"
 
-ImageSequence::ImageSequence(const char *fileName,int initialFile,float offsetTime){
+#include <string>
+
+
+using namespace std;
+
+ImageSequence::ImageSequence(const char *fileName,int initialFile,float offsetTime,int _fps,int maxNumFrames){
     this->baseFileName = fileName;
     this->intitialFileSeqCnt = initialFile;
     
     currentFrameNum = -1;
-    fps = 12;
-    maxNumofFrames = 653;
+    fps = _fps;
+    maxNumofFrames = maxNumFrames;
     this->offsetTime = offsetTime;
     
 }

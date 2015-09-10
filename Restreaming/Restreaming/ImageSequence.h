@@ -6,30 +6,26 @@
 //  Copyright (c) 2015 gaurav. All rights reserved.
 //
 
-#ifndef __Restreaming__ImageSequence__
-#define __Restreaming__ImageSequence__
-
-#include <stdio.h>
-
-#endif /* defined(__Restreaming__ImageSequence__) */
-
-
 extern "C"{
     
 #include <libavformat/avformat.h>
 #include <libavfilter/avcodec.h>
     
 }
+#include <stdio.h>
 
 
+
+#ifndef IMAGESEQUENCE_HPP
+#define IMAGESEQUENCE_HPP
 
 class ImageSequence{
     
 public:
-    ImageSequence(char const *,int initialFile,float offsetTime);
+    ImageSequence(char const *,int initialFile,float offsetTime,int fps,int maxFrames);
     
     /**
-        returns pointer to next frame in sequence.
+     returns pointer to next frame in sequence.
      */
     AVFrame * getFrame(float contentVideoTimeBase ,float ptsFactor, int contentVideoPts);
     
@@ -67,3 +63,8 @@ private:
     void closeFile();
     
 };
+
+#endif
+
+
+
