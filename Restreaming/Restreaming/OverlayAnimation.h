@@ -23,11 +23,12 @@ extern "C"{
 #define __Restreaming__OverlayAnimation__
 
 
+
 //Each class instance will represent a video file. either content video or animation video.
 class VideoFileInstance {
     
 public:
-    VideoFileInstance(int ,ImageSequence *, const char *,const char *);
+    VideoFileInstance(int ,ImageSequence *, const char *,const char *,int );
     int startDecoding();
     
     /**
@@ -55,6 +56,14 @@ public:
         return ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->width;
     }
     
+    void setUniqueId(int _id){
+        this->uniqueId = _id;
+    }
+    
+    int getUniqueId(){
+        return uniqueId;
+    }
+    
     /**
      for releasing context and closing codec etc.
      */
@@ -63,6 +72,10 @@ public:
     
 private:
     const char *fileName , *outputFilePath;
+    //unique id of the ffmpeg job. external apis will use this id
+    //to monitor status of job.
+    int uniqueId = 1;
+    int reportStatusEnabled;
     int VIDEO_STREAM_INDEX = 0;
     int VIDEO_TYPE_CONTENT = 1 , VIDEO_TYPE_ANIMATION = 2;
     int videoType; //1 = content video 2 = animation video
@@ -82,6 +95,8 @@ private:
     int processAudioPacket(AVPacket * , AVStream *, AVStream *);
     
     int64_t videoDuration;
+    
+    void reportStatus(int percent);
 };
 
 

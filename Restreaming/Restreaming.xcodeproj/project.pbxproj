@@ -69,6 +69,7 @@
 		18391DD21B6F6BE400C517F1 /* ImageSequence.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageSequence.h; sourceTree = "<group>"; };
 		184978781A276A0400FC84AA /* complex_filter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = complex_filter.cpp; sourceTree = "<group>"; };
 		184978791A276A0400FC84AA /* complex_filter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = complex_filter.h; sourceTree = "<group>"; };
+		188CFF301BA1C833005AC8C5 /* Config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Config.h; sourceTree = "<group>"; };
 		18C5768E1A122F6E00ED6C94 /* myLib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = myLib.c; sourceTree = "<group>"; };
 		18C5768F1A122F6E00ED6C94 /* myLib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = myLib.h; sourceTree = "<group>"; };
 		18D26F5E1BA0632B00FE5515 /* libmicrohttpd.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmicrohttpd.a; path = ../../../../../../usr/local/Cellar/libmicrohttpd/0.9.42/lib/libmicrohttpd.a; sourceTree = "<group>"; };
@@ -161,6 +162,7 @@
 				18D26F6D1BA098E400FE5515 /* Main.h */,
 				18D26F6F1BA09A7900FE5515 /* Utils2.cpp */,
 				18D26F701BA09A7900FE5515 /* Utils2.h */,
+				188CFF301BA1C833005AC8C5 /* Config.h */,
 			);
 			path = Restreaming;
 			sourceTree = "<group>";

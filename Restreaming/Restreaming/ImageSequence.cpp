@@ -13,6 +13,8 @@
 
 using namespace std;
 
+
+
 ImageSequence::ImageSequence(const char *fileName,int initialFile,float offsetTime,int _fps,int maxNumFrames){
     this->baseFileName = fileName;
     this->intitialFileSeqCnt = initialFile;
@@ -22,6 +24,10 @@ ImageSequence::ImageSequence(const char *fileName,int initialFile,float offsetTi
     maxNumofFrames = maxNumFrames;
     this->offsetTime = offsetTime;
     
+}
+
+float ImageSequence::getOffetTime(){
+    return offsetTime;
 }
 
 void ImageSequence::closeFile(){

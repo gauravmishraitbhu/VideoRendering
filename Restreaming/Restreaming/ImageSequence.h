@@ -31,6 +31,8 @@ public:
     
     int getVideoHeight();
     int getVideoWidth();
+    
+    float getOffetTime();
 private:
     //the decoded frame number, ie if currently the instance is holding decoded data for frame number 3
     //then this variable will be 3. starting from 1.

@@ -37,22 +37,59 @@ extern "C"{
 #include <iostream>
 #include <string>
 #include <map>
+#include <thread>
 #include <boost/any.hpp>
 #include "ImageSequence.h"
+
+#include <cpprest/http_client.h>
+#include <cpprest/json.h>
+#pragma comment(lib, "cpprest110_1_1")
+
+using namespace web;
+using namespace web::http;
+using namespace web::http::client;
 
 using namespace std;
 
 
 
-////////////////////////////////////////CLASS DECLARATION/////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////
+class ReportStatusTask{
+private:
+    int percent;
+    int uniqueId;
+public:
+    ReportStatusTask(int _uniqueId,int _percent){
+        percent = _percent;
+        uniqueId = _uniqueId;
+    }
+    
+    
+    void operator()() const{
+        try{
+           
+            json::value postData;
+            //postData.
+            utility::string_t unique("uniqueId");
+            utility::string_t percent_str("percent");
+            postData[unique] = json::value::number(uniqueId);
+            postData[percent_str] = json::value::number(percent);
+            
+            http_client client("http://localhost:3000/api/v1/reportstatus");
+            client.request(methods::POST,"",postData ).then([](http_response resp){
+                
+                if(resp.status_code() == status_codes::OK){
+                    cout << "successfull reported status for video id "<<endl;
+                }
+                
+            });
+        }catch(exception &e1){
+            cout << e1.what();
+        }
 
+        
+    }
+};
 
-int animatonTimeOffset = 0;
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 int VideoFileInstance::cleanup(){
@@ -133,6 +170,8 @@ int VideoFileInstance::startOverlaying(){
         return -1;
     }
     
+    int lastReportedPercent  = 0,percentGaps;
+    
     int ret;
     AVPacket packet,encodedPacket;
     AVFrame *contentVideoFrame, *contentVideoRGB , *contentVideoFinalYUV;
@@ -152,6 +191,15 @@ int VideoFileInstance::startOverlaying(){
     int64_t pts ;
     int frameEncodedCount=0;
     
+    
+    if(videoDuration < 10){
+        percentGaps = 50;
+    }else if(videoDuration >=10 && videoDuration < 30){
+        percentGaps = 25;
+    }else{
+        percentGaps = 10;
+    }
+    
     while(1){
         
         
@@ -159,6 +207,7 @@ int VideoFileInstance::startOverlaying(){
         ret = av_read_frame(ifmt_ctx, &packet);
         
         if(ret < 0) {
+            reportStatus(100);
             av_log( NULL , AV_LOG_ERROR , "error reading frame or end of file");
             break;
         }
@@ -232,6 +281,19 @@ int VideoFileInstance::startOverlaying(){
             int contentFrameWidth = this->getVideoWidth();
             
             float wallClockTimeContentVideo = timebase * (frameEncodedCount+1) * ptsFactor;
+            float animatonTimeOffset = imageSequence->getOffetTime();
+            
+            float currentPercent = wallClockTimeContentVideo/(float)videoDuration;
+            
+            currentPercent *= 100;
+            
+            int nearestPercent = currentPercent - (int)currentPercent % percentGaps;
+            
+            if(nearestPercent != 0 && nearestPercent != lastReportedPercent){
+                
+                reportStatus(nearestPercent);
+                lastReportedPercent = nearestPercent;
+            }
             
             if(wallClockTimeContentVideo > animatonTimeOffset){
                 
@@ -646,7 +708,7 @@ int VideoFileInstance::openFile() {
     
     av_dump_format(ifmt_ctx, 0, fileName, 0);
     
-    videoDuration = ifmt_ctx->duration;
+    videoDuration = ifmt_ctx->duration / 1000000;
     int i;
     for (i = 0; i < ifmt_ctx->nb_streams; i++) {
         AVStream *stream;
@@ -674,12 +736,13 @@ int VideoFileInstance::openFile() {
 
 
 
-VideoFileInstance::VideoFileInstance(int type,ImageSequence * imageSeq , const char *filename , const char *outputFile){
+VideoFileInstance::VideoFileInstance(int type,ImageSequence * imageSeq , const char *filename , const char *outputFile,int reportStatusEnabled){
     cout<< "creating instance of video file. of type  " << type << "\n";
     this->videoType = type;
     this->fileName = filename;
     this->imageSequence = imageSeq;
     this->outputFilePath = outputFile;
+    this->reportStatusEnabled = reportStatusEnabled;
     openFile();
     
     if(type == VIDEO_TYPE_CONTENT){
@@ -687,4 +750,31 @@ VideoFileInstance::VideoFileInstance(int type,ImageSequence * imageSeq , const c
     }
     
 }
+
+void VideoFileInstance::reportStatus(int percent) {
+    
+    if(reportStatusEnabled){
+    
+        string s = "reporting status for video id" + std::to_string( uniqueId ) + "percent == " + std::to_string(percent);
+
+        cout << s;
+        av_log(NULL, AV_LOG_DEBUG,s.c_str());
+        ReportStatusTask task(uniqueId,percent);
+        std::thread thread(task);
+        thread.detach();
+    }
+}
+
+//int main(){
+//    
+//    try{
+//        
+//    }catch (exception &e){
+//        cout << e.what();
+//    }
+//    
+//    
+//    getchar();
+//    //thread.detach();
+//}
 

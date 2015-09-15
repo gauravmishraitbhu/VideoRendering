@@ -10,11 +10,10 @@ extern "C"{
     
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
-#include <libavfilter/avfiltergraph.h>
-#include <libavfilter/avcodec.h>
-#include <libswresample/swresample.h>
-#include <libavutil/opt.h>    
-#include <libavformat/avformat.h>
+
+
+#include <libavutil/opt.h>
+
 //#include <>
     
 }

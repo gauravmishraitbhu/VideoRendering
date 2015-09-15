@@ -27,20 +27,18 @@
 //    
 //    
 //    
-//    ImageSequence *imageSequence  = new ImageSequence("/Users/apple/phantomjs/examples/frames/",1,0);
+//    ImageSequence *imageSequence  = new ImageSequence("/Users/apple/temp/frames/",1,0,12,653); //12,653
 //    
-//    VideoFileInstance *contentVideo = new VideoFileInstance(1,imageSequence,"/Users/apple/temp/Before_Vorator-2.mp4");
-//    //imageSequence->getFrame(0);
+//            VideoFileInstance *contentVideo = new VideoFileInstance(1,imageSequence,
+//                                                                    "/Users/apple/temp/Before_Vorator.mp4",
+//                                                                    "/Users/apple/temp/sample_output.mp4",
+//                                                                    1);
 //    
-//    // animationFileInstance = new VideoFileInstance(2,"/Users/apple/temp/kinetic_small.mp4");
 //    
-//    //contentVideo->remux();
+//            contentVideo->setUniqueId(2);
+//            contentVideo->startOverlaying();
 //    
-//    contentVideo->startOverlaying();
-//    //animationFileInstance->cleanup();
-//    
-//    //contentVideo->startDecoding();
-//    contentVideo->cleanup();
+//            contentVideo->cleanup();
 //    
 //    return 1;
 //    
