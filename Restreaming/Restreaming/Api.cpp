@@ -181,9 +181,9 @@ int main()
     
     av_register_all();
     
-    avfilter_register_all();
-    //utility::string_t s(L"http://localhost:8000/render");
-    http_listener listener("http://192.168.0.108:8000/render");
+//    avfilter_register_all();
+    //utility::string_t s(L"http://0.0.0.0:8000/render");
+    http_listener listener("http://0.0.0.0:8000/render");
     
     listener.support(methods::GET, handle_get);
    listener.support(methods::POST, handle_post);

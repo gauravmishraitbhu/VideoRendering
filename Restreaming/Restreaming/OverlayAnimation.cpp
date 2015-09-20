@@ -10,11 +10,10 @@
 
 extern "C"{
 #include <libavformat/avformat.h>
-#include <libavfilter/avfilter.h>
-#include <libavfilter/avcodec.h>
-#include <libavfilter/avfiltergraph.h>
-#include <libavfilter/buffersink.h>
-#include <libavfilter/buffersrc.h>
+
+#include <libavcodec/avcodec.h>
+
+
 #include <libavutil/timestamp.h>
 #include <libavutil/mathematics.h>
 #include <libavutil/opt.h>
@@ -28,7 +27,7 @@ extern "C"{
 #include <libavdevice/avdevice.h>
 #include <libswscale/swscale.h>
 #include <libavutil/pixdesc.h>
-    
+#include <libavutil/pixfmt.h>    
 #include <libavutil/time.h>
     
 }
@@ -130,7 +129,7 @@ int VideoFileInstance::openOutputFile() {
     cout << boost::any_cast<int>(videoOptions["bitrate"]);
     
     int ret = open_outputfile(outputFilePath,
-                              &out_stream , CODEC_ID_H264,
+                              &out_stream , AV_CODEC_ID_H264,
                               ifmt_ctx->streams[1]->codec,
                               ifmt_ctx->streams[0]->codec->width,
                               ifmt_ctx->streams[0]->codec->height,
@@ -421,7 +420,8 @@ int VideoFileInstance::startOverlaying(){
 
 int VideoFileInstance::startDecoding() {
     
-    AVPacket packet = { .data = NULL, .size = 0 };
+    AVPacket packet;
+    av_init_packet(&packet);
     
     AVFrame *frame , *rgbFrame , *yuvFrame;
     AVPacket encoded_packet;
@@ -633,7 +633,7 @@ int VideoFileInstance::convertToRGBFrame(AVFrame **yuvframe,AVFrame **rgbPictInf
     //init context if not done already.
     if (imgConvertCtxYUVToRGB == NULL) {
         //init once
-        imgConvertCtxYUVToRGB = sws_getContext(width, height, PIX_FMT_YUV420P, width, height, PIX_FMT_RGB24, SWS_FAST_BILINEAR, 0, 0, 0);
+        imgConvertCtxYUVToRGB = sws_getContext(width, height, AV_PIX_FMT_YUV420P, width, height, AV_PIX_FMT_RGB24, SWS_FAST_BILINEAR, 0, 0, 0);
         
         if(imgConvertCtxYUVToRGB == NULL) {
             av_log(NULL,AV_LOG_ERROR,"error creating img context");
@@ -648,7 +648,7 @@ int VideoFileInstance::convertToRGBFrame(AVFrame **yuvframe,AVFrame **rgbPictInf
     av_image_alloc( (*rgbPictInfo)->data,   //data to be filled
                    (*rgbPictInfo)->linesize,//line sizes to be filled
                    width, height,
-                   PIX_FMT_RGB24,           //pixel format
+                   AV_PIX_FMT_RGB24,           //pixel format
                    32                       //aling
                    );
     
@@ -667,7 +667,7 @@ int VideoFileInstance::convertToYuvFrame (AVFrame **rgbFrame , AVFrame ** yuvFra
     int height = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->height;
     
     if(imgConvertCtxRGBToYUV == NULL) {
-        imgConvertCtxRGBToYUV = sws_getContext(width, height, PIX_FMT_RGB24, width, height, PIX_FMT_YUV420P, SWS_FAST_BILINEAR, 0, 0, 0);
+        imgConvertCtxRGBToYUV = sws_getContext(width, height, AV_PIX_FMT_RGB24, width, height, AV_PIX_FMT_YUV420P, SWS_FAST_BILINEAR, 0, 0, 0);
         
         if(imgConvertCtxRGBToYUV == NULL){
             av_log(NULL,AV_LOG_ERROR,"error creating img context");
@@ -679,7 +679,7 @@ int VideoFileInstance::convertToYuvFrame (AVFrame **rgbFrame , AVFrame ** yuvFra
     av_image_alloc( (*yuvFrame)->data,   //data to be filled
                    (*yuvFrame)->linesize, //line sizes to be filled
                    width, height,
-                   PIX_FMT_YUV420P,        //pixel format
+                   AV_PIX_FMT_YUV420P,        //pixel format
                    32                      //aling
                    );
     

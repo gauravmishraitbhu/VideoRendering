@@ -13,6 +13,7 @@ extern "C"{
 
 
 #include <libavutil/opt.h>
+    #include <libavutil/pixfmt.h>
 
 //#include <>
     
@@ -120,8 +121,7 @@ int open_outputfile_copy_codecs(const char *filename, OutputStream *outputStream
     if (!(ofmt_ctx->oformat->flags & AVFMT_NOFILE)) {
         ret = avio_open(&ofmt_ctx->pb, filename, AVIO_FLAG_WRITE);
         if (ret < 0) {
-            fprintf(stderr, "Could not open '%s': %s\n", filename,
-                    av_err2str(ret));
+            fprintf(stderr, "Could not open '%s'\n", filename);
             exit(1);
         }
     }
@@ -153,7 +153,7 @@ int open_outputfile(const char *filename,OutputStream *out_stream,
     avformat_alloc_output_context2(&ofmt_ctx, NULL, NULL , filename);
     out_stream->format_ctx = ofmt_ctx;
     
-    add_stream(ofmt_ctx, &video_codec, CODEC_ID_H264,video_width,video_height,options);
+    add_stream(ofmt_ctx, &video_codec, AV_CODEC_ID_H264,video_width,video_height,options);
     open_video(ofmt_ctx, video_codec, NULL);
     
     if(inputAudioCodec != NULL) {
@@ -170,8 +170,8 @@ int open_outputfile(const char *filename,OutputStream *out_stream,
     if (!(ofmt_ctx->oformat->flags & AVFMT_NOFILE)) {
         ret = avio_open(&ofmt_ctx->pb, filename, AVIO_FLAG_WRITE);
         if (ret < 0) {
-            fprintf(stderr, "Could not open '%s': %s\n", filename,
-                    av_err2str(ret));
+            
+            av_log(NULL, AV_LOG_ERROR, "Could not open '%s'\n",filename);
             exit(1);
         }
     }
@@ -284,7 +284,7 @@ void add_stream(AVFormatContext *oc,
             c->time_base       = out_stream->time_base;
             
             // c->gop_size      = 12; /* emit one intra frame every twelve frames at most */
-            c->pix_fmt       = PIX_FMT_YUV420P;
+            c->pix_fmt       = AV_PIX_FMT_YUV420P;
             if (c->codec_id == AV_CODEC_ID_MPEG2VIDEO) {
                 /* just for testing, we also add B frames */
                 c->max_b_frames = 2;
@@ -369,7 +369,7 @@ void open_video(AVFormatContext *oc, AVCodec *codec, AVDictionary *opt_arg)
     ret = avcodec_open2(c, codec, &opt);
     av_dict_free(&opt);
     if (ret < 0) {
-        fprintf(stderr, "Could not open video codec: %s\n", av_err2str(ret));
+        fprintf(stderr, "Could not open video codec:\n");
         exit(1);
     }
 }
@@ -389,7 +389,7 @@ void open_audio(AVFormatContext *oc, AVCodec *codec, AVDictionary *opt_arg)
     ret = avcodec_open2(c, codec, &opt);
     av_dict_free(&opt);
     if (ret < 0) {
-        fprintf(stderr, "Could not open audio codec: %s\n", av_err2str(ret));
+        fprintf(stderr, "Could not open audio codec:\n");
         exit(1);
     }
     

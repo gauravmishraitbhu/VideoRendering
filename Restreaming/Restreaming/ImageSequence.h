@@ -9,7 +9,7 @@
 extern "C"{
     
 #include <libavformat/avformat.h>
-#include <libavfilter/avcodec.h>
+#include <libavcodec/avcodec.h>
     
 }
 #include <stdio.h>

@@ -19,8 +19,8 @@
 
 extern "C"{
 #include <libavformat/avformat.h>
-#include <libavfilter/avfilter.h>
-#include <libavfilter/avcodec.h>
+
+#include <libavcodec/avcodec.h>
 }
 
 #include "Utils2.h"
