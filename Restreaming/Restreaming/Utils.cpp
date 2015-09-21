@@ -273,6 +273,7 @@ void add_stream(AVFormatContext *oc,
              * timebase should be 1/framerate and timestamp increments should be
              * identical to 1. */
             
+            
             if(options.find("timebase_denominator") != options.end()){
                 int denominator = boost::any_cast<int>(options["timebase_denominator"]);
                 int numerator = boost::any_cast<int>(options["timebase_numerator"]);
@@ -301,6 +302,7 @@ void add_stream(AVFormatContext *oc,
             c->sample_fmt  = (*codec)->sample_fmts ?
             (*codec)->sample_fmts[0] : AV_SAMPLE_FMT_FLTP;
             
+            
             if(options.find("audio_sample_rate") != options.end())
             {
                 c->sample_rate = boost::any_cast<int>(options["audio_sample_rate"]);
@@ -319,12 +321,14 @@ void add_stream(AVFormatContext *oc,
                 }
             }
             
+            
             if(options.find("frame_size") != options.end())
             {
                 c->frame_size = boost::any_cast<int>(options["frame_size"]);
             }
             
            // c->channels        = av_get_channel_layout_nb_channels(c->channel_layout);
+            
             if(options.find("channel_layout") != options.end())
             {
                 c->channel_layout = boost::any_cast<uint64_t>(options["channel_layout"]);

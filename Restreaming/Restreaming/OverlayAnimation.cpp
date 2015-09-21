@@ -118,14 +118,18 @@ int VideoFileInstance::cleanup(){
 int VideoFileInstance::openOutputFile() {
     
     std::map<string,boost::any> videoOptions ;
-    videoOptions["bitrate"] = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->bit_rate;
-    videoOptions["timebase_denominator"] = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->time_base.den;
-    videoOptions["timebase_numerator"] = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->time_base.num;
+    AVCodecContext *videoCodecCtx , *audioCodecCtx;
+    videoCodecCtx = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec;
+    videoOptions["bitrate"] = (int)(videoCodecCtx->bit_rate);
+    videoOptions["timebase_denominator"] = videoCodecCtx->time_base.den;
+    videoOptions["timebase_numerator"] = videoCodecCtx->time_base.num;
     
-    videoOptions["frame_size"] = ifmt_ctx->streams[1]->codec->frame_size;
-    videoOptions["audio_bitrate"] = ifmt_ctx->streams[1]->codec->bit_rate;
-    videoOptions["audio_sample_rate"] = ifmt_ctx->streams[1]->codec->sample_rate;
-    videoOptions["channel_layout"] = ifmt_ctx->streams[1]->codec->channel_layout;
+    audioCodecCtx = ifmt_ctx->streams[1]->codec;
+    videoOptions["frame_size"] = audioCodecCtx->frame_size;
+    videoOptions["audio_bitrate"] = audioCodecCtx->bit_rate;
+    videoOptions["audio_sample_rate"] = audioCodecCtx->sample_rate;
+    videoOptions["channel_layout"] = audioCodecCtx->channel_layout;
+    
     cout << boost::any_cast<int>(videoOptions["bitrate"]);
     
     int ret = open_outputfile(outputFilePath,
@@ -255,7 +259,7 @@ int VideoFileInstance::startOverlaying(){
         
         if(ret<0){
             av_frame_free(&contentVideoFrame);
-            printf("could not decode a packet....");
+            fprintf(stderr,"could not decode a packet....");
             return ret;
         }
         
@@ -345,8 +349,13 @@ int VideoFileInstance::startOverlaying(){
             //convert the content rgb to yuv
             convertToYuvFrame(&contentVideoRGB, &contentVideoFinalYUV);
             
-            
+            AVCodecContext *codecCtx = this->out_stream.format_ctx->streams[0]->codec;
             contentVideoFinalYUV->pts = ptsFactor*frameEncodedCount ;
+            
+            contentVideoFinalYUV->format = codecCtx->pix_fmt;
+            contentVideoFinalYUV->height = codecCtx->height;
+            contentVideoFinalYUV->width = codecCtx->width;
+            
             frameEncodedCount++;
             //av_log(NULL,AV_LOG_INFO,"frame numer %d",frameEncodedCount);
             //encode the packet
@@ -490,7 +499,7 @@ int VideoFileInstance::startDecoding() {
             
             if(ret<0){
                 av_frame_free(&frame);
-                printf("could not decode a packet....");
+                fprintf(stderr,"could not decode a packet....");
                 return ret;
             }
             

@@ -76,7 +76,8 @@ void handle_get(http_request request)
 //    Task task;
 //    std::thread thread(task);
 //    thread.detach();
-    cout << request.to_string();
+     string s = request.to_string();
+    TRACE(s.c_str());
     request.reply(status_codes::OK, "Hello WOrld");
 }
 
