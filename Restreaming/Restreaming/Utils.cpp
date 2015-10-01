@@ -172,7 +172,7 @@ int open_outputfile(const char *filename,OutputStream *out_stream,
         if (ret < 0) {
             
             av_log(NULL, AV_LOG_ERROR, "Could not open '%s'\n",filename);
-            exit(1);
+            return ret;
         }
     }
     

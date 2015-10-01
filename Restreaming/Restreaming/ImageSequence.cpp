@@ -40,8 +40,8 @@ void ImageSequence::closeFile(){
     }
 }
 
-void ImageSequence::openFile(const char *fileName){
-    int ret;
+int ImageSequence::openFile(const char *fileName){
+    int ret = 0;
     unsigned int i;
     
    
@@ -49,14 +49,14 @@ void ImageSequence::openFile(const char *fileName){
     
     if ((ret = avformat_open_input(&ifmt_ctx, fileName, NULL, NULL)) < 0) {
         av_log(NULL, AV_LOG_ERROR, "Cannot open input file\n");
-        // return ret;
+        return ret;
     }
     
     //setting the member variable
     
     if ((ret = avformat_find_stream_info(ifmt_ctx, NULL)) < 0) {
         av_log(NULL, AV_LOG_ERROR, "Cannot find stream information\n");
-        //return ret;
+        return ret;
     }
     
     for (i = 0; i < (ifmt_ctx)->nb_streams; i++) {
@@ -75,7 +75,7 @@ void ImageSequence::openFile(const char *fileName){
             width = codec_ctx->width;
             if (ret < 0) {
                 av_log(NULL, AV_LOG_ERROR, "Failed to open decoder for stream #%u\n", i);
-                //return ret;
+                return ret;
             }
         }
     }
@@ -83,7 +83,7 @@ void ImageSequence::openFile(const char *fileName){
     
     
     //av_dump_format(ifmt_ctx, 0, fileName, 0);
-    //return 0;
+    return ret;
     
     
    // av_log(NULL,AV_LOG_INFO,"opened first file");
@@ -93,7 +93,7 @@ AVFrame * ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,i
     
     
     int nextFrameNum = calculateNextFrameNumber(contentVideoTimeBase,  ptsFactor,contentVideoPts);
-    
+    int ret = 0;
     //responsility of caller to handle NULL
     if(nextFrameNum > maxNumofFrames){
         return NULL;
@@ -105,7 +105,11 @@ AVFrame * ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,i
         int currSeq = intitialFileSeqCnt + currentFrameNum - 1;
         
         std::string completeName = std::string(baseFileName) + std::string("frame")+std::to_string(currSeq) + std::string(".png");
-        openFile(completeName.c_str());
+        ret = openFile(completeName.c_str());
+        if(ret < 0){
+            av_log(NULL, AV_LOG_ERROR, "Error opening a image file.... %s" , completeName.c_str());
+            return NULL;
+        }
         //openFile("/Users/apple/temp/frame11.png");
         
         AVPacket packet;

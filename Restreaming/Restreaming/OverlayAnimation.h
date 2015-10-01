@@ -29,6 +29,14 @@ class VideoFileInstance {
     
 public:
     VideoFileInstance(int ,ImageSequence *, const char *,const char *,int );
+    
+    /**
+     opens the provided input and output files. returns 0 is both are successfull. else 
+     return < 0
+     */
+    int openInputAndOutputFiles();
+    
+    
     int startDecoding();
     
     /**

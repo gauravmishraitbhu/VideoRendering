@@ -58,7 +58,7 @@ private:
     AVFrame *currFrame = NULL;
     AVFormatContext *ifmt_ctx = NULL;
     
-    void openFile(const char * fileName);
+    int openFile(const char * fileName);
     
     int calculateNextFrameNumber(float contentVideoTimeBase , float ptsFactor,int contentVideoPts);
     

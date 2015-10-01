@@ -57,12 +57,21 @@ class Task{
                                                                 videoPath.c_str(),
                                                                 outputFilePath.c_str(),
                                                                 reportingEnabled);
-        
+           int ret = contentVideo->openInputAndOutputFiles();
             
-        contentVideo->setUniqueId(uniqueId);
-        contentVideo->startOverlaying();
+            if(ret < 0){
+                av_log(NULL,AV_LOG_ERROR ,"Error occured while openong input or output files");
+                return;
+            }
+            
+            contentVideo->setUniqueId(uniqueId);
+            ret = contentVideo->startOverlaying();
+            
+            if(ret < 0){
+                av_log(NULL,AV_LOG_ERROR ,"Error occured while overlaying");
+            }
         
-        contentVideo->cleanup();
+            contentVideo->cleanup();
         }catch(exception const & e){
            wcout << e.what() << endl;
         }

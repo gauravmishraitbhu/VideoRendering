@@ -226,7 +226,11 @@ int VideoFileInstance::startOverlaying(){
             output_stream = out_stream.format_ctx->streams[packet.stream_index];
             
             
-            processAudioPacket(&packet, in_stream, output_stream);
+            ret = processAudioPacket(&packet, in_stream, output_stream);
+            if(ret < 0) {
+                av_log( NULL , AV_LOG_ERROR , "error while processing audio packet");
+                return ret;
+            }
             
             continue;
         }
@@ -422,7 +426,10 @@ int VideoFileInstance::startOverlaying(){
         av_free_packet(&packet);
     }
     
-    av_write_trailer(out_stream.format_ctx);
+    ret = av_write_trailer(out_stream.format_ctx);
+    if(ret < 0){
+        av_log(NULL,AV_LOG_ERROR , "Error writing  a trailer to container...");
+    }
     
     return ret;
 }
@@ -752,12 +759,24 @@ VideoFileInstance::VideoFileInstance(int type,ImageSequence * imageSeq , const c
     this->imageSequence = imageSeq;
     this->outputFilePath = outputFile;
     this->reportStatusEnabled = reportStatusEnabled;
-    openFile();
     
-    if(type == VIDEO_TYPE_CONTENT){
-        openOutputFile();
+    
+}
+
+int VideoFileInstance::openInputAndOutputFiles(){
+    int ret = openFile();
+    
+    if(ret < 0){
+        return ret;
+    }else{
+        
+        if(this->videoType == VIDEO_TYPE_CONTENT){
+            ret = openOutputFile();
+        }
+        
     }
-    
+    return ret;
+
 }
 
 void VideoFileInstance::reportStatus(int percent) {
