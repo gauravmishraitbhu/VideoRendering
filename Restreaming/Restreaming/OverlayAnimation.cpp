@@ -162,6 +162,43 @@ int VideoFileInstance::processAudioPacket(AVPacket *packet , AVStream *in_stream
     return ret;
 }
 
+int VideoFileInstance::encodeWriteFrame(AVFrame *frame ,AVPacket *encodedPacket ,int *encode_success){
+    int ret;
+    
+    ret = avcodec_encode_video2(this->out_stream.format_ctx->streams[0]->codec,
+                                encodedPacket,
+                                frame,
+                                encode_success);
+    if(ret < 0){
+        av_log(NULL,AV_LOG_ERROR , "Error encoding a frame");
+        
+    }
+    
+    
+    
+    // encode the packet and mux it into the container
+    if(*encode_success){
+        encodedPacket->stream_index = VIDEO_STREAM_INDEX;
+        
+        
+        av_packet_rescale_ts(encodedPacket,
+                             this->out_stream.format_ctx->streams[0]->codec->time_base,
+                             this->out_stream.format_ctx->streams[0]->time_base);
+        
+        
+        ret = av_interleaved_write_frame(this->out_stream.format_ctx, encodedPacket);
+        
+        if(ret < 0){
+            av_log(NULL,AV_LOG_ERROR , "Error writing  a frame to container...");
+            return ret;
+        }
+        
+    }
+    
+    return ret;
+
+}
+
 int VideoFileInstance::processVideoPacket(AVPacket *packet , int *frameEncodedCount, int *framesLeftInEncoder){
     
     AVFrame *contentVideoFrame, *contentVideoRGB , *contentVideoFinalYUV;
@@ -282,41 +319,11 @@ int VideoFileInstance::processVideoPacket(AVPacket *packet , int *frameEncodedCo
         
         (*frameEncodedCount)++;
         //av_log(NULL,AV_LOG_INFO,"frame numer %d",frameEncodedCount);
-        //encode the packet
+        
+        //encode and write the frame to container
         av_init_packet(&encodedPacket);
-        encode_success = 0;
-        ret = avcodec_encode_video2(this->out_stream.format_ctx->streams[0]->codec,
-                                    &encodedPacket,
-                                    contentVideoFinalYUV,
-                                    &encode_success);
-        if(ret < 0){
-            av_log(NULL,AV_LOG_ERROR , "Error encoding a frame");
-            
-        }
-        
-        
-        
-        // encode the packet and mux it into the container
-        if(encode_success){
-            encodedPacket.stream_index = VIDEO_STREAM_INDEX;
-            
-            
-            av_packet_rescale_ts(&encodedPacket,
-                                 this->out_stream.format_ctx->streams[0]->codec->time_base,
-                                 this->out_stream.format_ctx->streams[0]->time_base);
-            
-            
-            ret = av_interleaved_write_frame(this->out_stream.format_ctx, &encodedPacket);
-            
-            if(ret < 0){
-                av_log(NULL,AV_LOG_ERROR , "Error writing  a frame to container...");
-                return ret;
-            }
-            
-        }else{
-            //av_log(NULL,AV_LOG_ERROR , "Error encoding a frame");
-            
-        }
+     
+        encodeWriteFrame(contentVideoFinalYUV, &encodedPacket,&encode_success);
         
         //cleanup
         av_freep(contentVideoRGB->data);
@@ -358,7 +365,7 @@ int VideoFileInstance::startOverlaying(){
     
     int ret;
     AVPacket packet;
-    int framesLeftInEncoder;
+    int framesLeftInDecoder;
     
     int frameEncodedCount=0;
     
@@ -402,7 +409,7 @@ int VideoFileInstance::startOverlaying(){
                 continue;
             }
             
-            ret = processVideoPacket(&packet, &frameEncodedCount,&framesLeftInEncoder);
+            ret = processVideoPacket(&packet, &frameEncodedCount,&framesLeftInDecoder);
             if(ret < 0){
                 av_log( NULL , AV_LOG_ERROR , "error while processing video packet");
                 continue;
@@ -416,14 +423,14 @@ int VideoFileInstance::startOverlaying(){
     //at this point there are no more packet in container.
     //but decoder can still contain some frames so flush them out.
     AVPacket dummyPkt,encodedPacket;
-    framesLeftInEncoder = 1;
+    framesLeftInDecoder = 1;
     do {
         av_init_packet(&dummyPkt);
         dummyPkt.data = NULL;
         dummyPkt.size = 0;
-        processVideoPacket(&dummyPkt, &frameEncodedCount , &framesLeftInEncoder);
+        processVideoPacket(&dummyPkt, &frameEncodedCount , &framesLeftInDecoder);
         
-    } while(framesLeftInEncoder);
+    } while(framesLeftInDecoder);
     
     
     //some codecs can delay delay some packets
@@ -435,34 +442,9 @@ int VideoFileInstance::startOverlaying(){
 
         do{
             av_init_packet(&encodedPacket);
+            //have to set data to null when flushing encoder
             encodedPacket.data = NULL;
-            ret = avcodec_encode_video2(this->out_stream.format_ctx->streams[0]->codec,
-                                  &encodedPacket,
-                                  NULL,
-                                  &encode_success);
-            
-            if(ret  < 0){
-                av_log(NULL,AV_LOG_ERROR , "Error While flushing encoder");
-                break;
-            }
-            if(encode_success){
-                encodedPacket.stream_index = VIDEO_STREAM_INDEX;
-                
-                
-                av_packet_rescale_ts(&encodedPacket,
-                                     this->out_stream.format_ctx->streams[0]->codec->time_base,
-                                     this->out_stream.format_ctx->streams[0]->time_base);
-                
-                
-                ret = av_interleaved_write_frame(this->out_stream.format_ctx, &encodedPacket);
-                
-                
-                if(ret < 0){
-                    av_log(NULL,AV_LOG_ERROR , "Error writing  a frame to container...");
-                    return ret;
-                }
-
-            }
+            encodeWriteFrame(NULL, &encodedPacket, &encode_success);
             av_free_packet(&encodedPacket);
             
             

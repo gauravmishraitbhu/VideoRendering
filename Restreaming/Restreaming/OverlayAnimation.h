@@ -104,6 +104,11 @@ private:
     
     int64_t videoDuration;
     
+    /**
+     *  calls external rest api to inform about how much percent of current rendering is done.
+     *
+     *  @param percent <#percent description#>
+     */
     void reportStatus(int percent);
     
     
@@ -119,6 +124,18 @@ private:
      */
     int processVideoPacket(AVPacket *packet,int *frameCount,int *framesLeftInEncoder);
     
+    /**
+     *  encodes and write the current frame to output container.
+     *
+     *  @param contentFrame   the frame which contains the current data which needs to be muxed. 
+                                can be NULL when flushing encoder
+     *  @param packet         packet placholder where data will be encoded
+     *  @param encode_success 0/1 depending on encode was success. sometimes even though no errors
+                              this will be 0. this can happen in some encoders which have delay.
+     *
+     *  @return 0 is all is well.
+     */
+    int encodeWriteFrame(AVFrame *contentFrame,AVPacket *packet ,int *encode_success);
 };
 
 
