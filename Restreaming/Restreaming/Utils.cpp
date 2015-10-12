@@ -10,12 +10,12 @@ extern "C"{
     
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
-
-
+    
+    
 #include <libavutil/opt.h>
-    #include <libavutil/pixfmt.h>
-
-//#include <>
+#include <libavutil/pixfmt.h>
+    
+    //#include <>
     
 }
 
@@ -90,29 +90,29 @@ int open_outputfile_copy_codecs(const char *filename, OutputStream *outputStream
     
     //copy the settings
     //videoStream->codec = avcodec_alloc_context3(videoCodec);
-//    ret = avcodec_copy_context(outputVideoStream->codec, inputVideoCodec);
-//    if (ret < 0) {
-//        fprintf(stderr, "Failed to copy context from input to output stream codec context\n");
-//        return ret;
-//    }
+    //    ret = avcodec_copy_context(outputVideoStream->codec, inputVideoCodec);
+    //    if (ret < 0) {
+    //        fprintf(stderr, "Failed to copy context from input to output stream codec context\n");
+    //        return ret;
+    //    }
     
     int m_fps = 25;
     AVStream *inputVideoStream = inputFormatCtx->streams[0];
     outputVideoStream->sample_aspect_ratio.den = inputVideoStream->sample_aspect_ratio.den;
     outputVideoStream->sample_aspect_ratio.num = inputVideoStream->sample_aspect_ratio.num;
-    outputVideoStream->codec->codec_id = inputVideoStream->codec->codec_id;
-    outputVideoStream->codec->time_base.num = 1;
+    outputVideoStream->codec->codec_id         = inputVideoStream->codec->codec_id;
+    outputVideoStream->codec->time_base.num    = 1;
     outputVideoStream->codec->time_base.den =
     m_fps*(inputVideoStream->codec->ticks_per_frame);
-    outputVideoStream->time_base.num = 1;
-    outputVideoStream->time_base.den = 1000;
-    outputVideoStream->r_frame_rate.num = m_fps;
-    outputVideoStream->r_frame_rate.den = 1;
-    outputVideoStream->avg_frame_rate.den = 1;
-    outputVideoStream->avg_frame_rate.num = m_fps;
-//    m_out_vid_strm->duration = (m_out_end_time - m_out_start_time)*1000;
+    outputVideoStream->time_base.num           = 1;
+    outputVideoStream->time_base.den           = 1000;
+    outputVideoStream->r_frame_rate.num        = m_fps;
+    outputVideoStream->r_frame_rate.den        = 1;
+    outputVideoStream->avg_frame_rate.den      = 1;
+    outputVideoStream->avg_frame_rate.num      = m_fps;
+    //    m_out_vid_strm->duration = (m_out_end_time - m_out_start_time)*1000;
     //outputVideoStream->codec->bit_rate = 400000;
-
+    
     
     /* Resolution must be a multiple of two. */
     outputVideoStream->codec->width    = inputFormatCtx->streams[0]->codec->width;
@@ -124,24 +124,24 @@ int open_outputfile_copy_codecs(const char *filename, OutputStream *outputStream
      * identical to 1. */
     
     
-//    if(options.find("timebase_denominator") != options.end()){
-//        int denominator = boost::any_cast<int>(options["timebase_denominator"]);
-//        int numerator = boost::any_cast<int>(options["timebase_numerator"]);
-//        out_stream->time_base = (AVRational) {numerator,denominator};
-//    }else{
-//        out_stream->time_base = (AVRational){ 1, 25 };
-//    }
-//    
-//    c->time_base       = out_stream->time_base;
+    //    if(options.find("timebase_denominator") != options.end()){
+    //        int denominator = boost::any_cast<int>(options["timebase_denominator"]);
+    //        int numerator = boost::any_cast<int>(options["timebase_numerator"]);
+    //        out_stream->time_base = (AVRational) {numerator,denominator};
+    //    }else{
+    //        out_stream->time_base = (AVRational){ 1, 25 };
+    //    }
+    //
+    //    c->time_base       = out_stream->time_base;
     
     // c->gop_size      = 12; /* emit one intra frame every twelve frames at most */
     outputVideoStream->codec->pix_fmt       = AV_PIX_FMT_YUV420P;
-
-
-//    outputVideoStream->codec->codec_tag = 0;
+    
+    
+    //    outputVideoStream->codec->codec_tag = 0;
     if (ofmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
         outputVideoStream->codec->flags |= CODEC_FLAG_GLOBAL_HEADER;
-
+    
     AVCodecContext *videoCodecCtx = outputVideoStream->codec;
     
     
@@ -152,26 +152,26 @@ int open_outputfile_copy_codecs(const char *filename, OutputStream *outputStream
         fprintf(stderr, "Could not open video codec:\n");
         exit(1);
     }
-
+    
     
     //add audio stream
     
-//    AVCodec *audioCodec = avcodec_find_encoder(inputAudioCodecCtx->codec_id);
-//    AVStream *audioStream = avformat_new_stream(ofmt_ctx, audioCodec);
-//    if (!audioStream) {
-//        fprintf(stderr, "Failed allocating output stream\n");
-//        ret = AVERROR_UNKNOWN;
-//        return ret;
-//    }
-//    
-//    ret = avcodec_copy_context(audioStream->codec, inputAudioCodecCtx);
-//    if (ret < 0) {
-//        fprintf(stderr, "Failed to copy context from input to output stream codec context\n");
-//        return ret;
-//    }
-//    audioStream->codec->codec_tag = 0;
-//    if (ofmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
-//        audioStream->codec->flags |= CODEC_FLAG_GLOBAL_HEADER;
+    //    AVCodec *audioCodec = avcodec_find_encoder(inputAudioCodecCtx->codec_id);
+    //    AVStream *audioStream = avformat_new_stream(ofmt_ctx, audioCodec);
+    //    if (!audioStream) {
+    //        fprintf(stderr, "Failed allocating output stream\n");
+    //        ret = AVERROR_UNKNOWN;
+    //        return ret;
+    //    }
+    //
+    //    ret = avcodec_copy_context(audioStream->codec, inputAudioCodecCtx);
+    //    if (ret < 0) {
+    //        fprintf(stderr, "Failed to copy context from input to output stream codec context\n");
+    //        return ret;
+    //    }
+    //    audioStream->codec->codec_tag = 0;
+    //    if (ofmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
+    //        audioStream->codec->flags |= CODEC_FLAG_GLOBAL_HEADER;
     
     
     av_dump_format(ofmt_ctx, 0, filename, 1);
@@ -192,8 +192,8 @@ int open_outputfile_copy_codecs(const char *filename, OutputStream *outputStream
         return ret;
     }
     
-
-
+    
+    
     return ret;
 }
 
@@ -203,9 +203,10 @@ int open_outputfile(const char *filename,OutputStream *out_stream,AVFormatContex
     
     //cout<< boost::any_cast<AVRational>(videoOptions1["timebase"]);
     AVFormatContext *ofmt_ctx = NULL;
-    AVCodec *video_codec = NULL;
-    int ret = 0;
-    AVCodec *audio_codec = NULL;
+    AVCodec *video_codec      = NULL;
+    int ret                   = 0;
+    AVCodec *audio_codec      = NULL;
+    
     avformat_alloc_output_context2(&ofmt_ctx, NULL, NULL , filename);
     out_stream->format_ctx = ofmt_ctx;
     
@@ -215,7 +216,7 @@ int open_outputfile(const char *filename,OutputStream *out_stream,AVFormatContex
     if(inputFormatCtx->streams[1] != NULL) {
         add_stream_from_codec(ofmt_ctx,&audio_codec,inputFormatCtx->streams[1]->codec);
         //ret = avcodec_copy_context(ofmt_ctx->streams[1]->codec, inputAudioCodec);
-       // open_audio(ofmt_ctx, audio_codec, NULL);
+        // open_audio(ofmt_ctx, audio_codec, NULL);
         
     }
     
@@ -243,8 +244,8 @@ int open_outputfile(const char *filename,OutputStream *out_stream,AVFormatContex
 }
 
 int add_stream_from_codec(AVFormatContext *oc,
-                AVCodec **codec,
-                AVCodecContext *inputCodec)
+                          AVCodec **codec,
+                          AVCodecContext *inputCodec)
 {
     int ret = 0;
     *codec = avcodec_find_encoder(inputCodec->codec_id);
@@ -255,21 +256,21 @@ int add_stream_from_codec(AVFormatContext *oc,
         return -1;
     }
     
-        AVStream *out_stream = avformat_new_stream(oc,*codec);
-        if (!out_stream) {
-            fprintf(stderr, "Failed allocating output stream\n");
-            ret = AVERROR_UNKNOWN;
-            return ret;
-        }
-
-        ret = avcodec_copy_context(out_stream->codec, inputCodec);
-        if (ret < 0) {
-            fprintf(stderr, "Failed to copy context from input to output stream codec context\n");
-            return ret;
-        }
+    AVStream *out_stream = avformat_new_stream(oc,*codec);
+    if (!out_stream) {
+        fprintf(stderr, "Failed allocating output stream\n");
+        ret = AVERROR_UNKNOWN;
+        return ret;
+    }
+    
+    ret = avcodec_copy_context(out_stream->codec, inputCodec);
+    if (ret < 0) {
+        fprintf(stderr, "Failed to copy context from input to output stream codec context\n");
+        return ret;
+    }
     
     out_stream->codec->codec_tag = 0;
-
+    
     /* Some formats want stream headers to be separate. */
     if (oc->oformat->flags & AVFMT_GLOBALHEADER)
         out_stream->codec->flags |= CODEC_FLAG_GLOBAL_HEADER;
@@ -281,7 +282,7 @@ int add_stream_from_codec(AVFormatContext *oc,
 
 void add_stream(AVFormatContext *oc,
                 AVCodec **codec,
-               AVStream *inputStream)
+                AVStream *inputStream)
 {
     AVCodecContext *c;
     int i;
@@ -309,14 +310,15 @@ void add_stream(AVFormatContext *oc,
         case AVMEDIA_TYPE_VIDEO:
             c->codec_id = inputStream->codec->codec_id;
             
-        
+            
             c->bit_rate = inputStream->codec->bit_rate;
-           
+            
             
             /* Resolution must be a multiple of two. */
             c->width    = inputStream->codec->width;
             c->height   = inputStream->codec->height;
-        
+            c->gop_size = inputStream->codec->gop_size;
+            
             /* timebase: This is the fundamental unit of time (in seconds) in terms
              * of which frame timestamps are represented. For fixed-fps content,
              * timebase should be 1/framerate and timestamp increments should be
@@ -359,17 +361,17 @@ void add_stream(AVFormatContext *oc,
             }
             
             
-        
+            
             c->frame_size = inputStream->codec->frame_size;
             
             
-           // c->channels        = av_get_channel_layout_nb_channels(c->channel_layout);
+            // c->channels        = av_get_channel_layout_nb_channels(c->channel_layout);
             
-         
+            
             c->channel_layout = inputStream->codec->channel_layout;
             
             
-           
+            
             if ((*codec)->channel_layouts) {
                 c->channel_layout = (*codec)->channel_layouts[0];
                 for (i = 0; (*codec)->channel_layouts[i]; i++) {
@@ -435,7 +437,7 @@ void open_audio(AVFormatContext *oc, AVCodec *codec, AVDictionary *opt_arg)
     else
         nb_samples = c->frame_size;
     
-    }
+}
 
 
 int copyVideoPixelsRGBA(AVFrame **fromFrame, AVFrame **destFrame, int srcHeight , int srcWidth,int dstHeight,int dstWidth) {
@@ -445,7 +447,7 @@ int copyVideoPixelsRGBA(AVFrame **fromFrame, AVFrame **destFrame, int srcHeight 
     
     float srcPixelAlpha;
     
-     uint8_t dstPixelRed , dstPixelGreen , dstPixelBlue;
+    uint8_t dstPixelRed , dstPixelGreen , dstPixelBlue;
     int srcRow=0 , srcCol=0 ;   //srcRow from 0 to height
     int dstRow = 0,dstCol = 0 ;
     int startRow=0 , startCol = 0; //starting coordinates in content frame where
@@ -472,12 +474,12 @@ int copyVideoPixelsRGBA(AVFrame **fromFrame, AVFrame **destFrame, int srcHeight 
             srcPixelBlue = (*fromFrame)->data[0][srcRow * srcLinesize + 4*srcCol + 2];
             
             
-//            if(srcPixelRed == 255 && srcPixelGreen == 255 && srcPixelBlue == 255){
-//                continue;
-//            }
+            //            if(srcPixelRed == 255 && srcPixelGreen == 255 && srcPixelBlue == 255){
+            //                continue;
+            //            }
             srcPixelAlpha = float( (*fromFrame)->data[0][srcRow * srcLinesize + 4*srcCol + 3]);
             srcPixelAlpha = (float)srcPixelAlpha / (float)255;
-
+            
             
             dstPixelRed = (*destFrame)->data[0][dstRow * destLinesize + 3*dstCol];
             dstPixelGreen = (*destFrame)->data[0][dstRow * destLinesize + 3*dstCol + 1];

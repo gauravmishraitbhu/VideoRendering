@@ -106,7 +106,18 @@ private:
     
     void reportStatus(int percent);
     
-    int processVideoFrame(AVPacket *packet,int *frameCount);
+    
+    /**
+     @param AVPacket * - the packet read from input container.
+     if pkt.data = null then code will try to flush remaining frames from encoder.
+     
+     @param frameCount - total number of frames that have been encoded and muxed into container.
+     
+     @param framesLeftInEncoder - 0/1 indicating weather more calls to this function is required to 
+     flush remaining packets.
+     
+     */
+    int processVideoPacket(AVPacket *packet,int *frameCount,int *framesLeftInEncoder);
 };
 
 

@@ -53,8 +53,17 @@ int add_stream_from_codec(AVFormatContext *oc,
                           AVCodecContext *inputCodec);
 
 
+
 /**
- creates a file with the codecs and codec settings copied from the input params.
+ *  creates a file with the codecs and codec settings copied from the input params.
+ *
+ *  @param filename       <#filename description#>
+ *  @param outputStream   <#outputStream description#>
+ *  @param videoCodec     <#videoCodec description#>
+ *  @param audioCodecCtx  <#audioCodecCtx description#>
+ *  @param inputFormatCtx <#inputFormatCtx description#>
+ *
+ *  @return <#return value description#>
  */
 int open_outputfile_copy_codecs(const char *filename, OutputStream *outputStream,AVCodecContext *videoCodec , AVCodecContext *audioCodecCtx , AVFormatContext * inputFormatCtx);
 
