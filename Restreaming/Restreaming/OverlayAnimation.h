@@ -105,6 +105,8 @@ private:
     int64_t videoDuration;
     
     void reportStatus(int percent);
+    
+    int processVideoFrame(AVPacket *packet,int *frameCount);
 };
 
 
