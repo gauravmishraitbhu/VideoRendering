@@ -381,7 +381,7 @@ int VideoFileInstance::startOverlaying(){
         
         
         if(in_stream->codec->codec_type == AVMEDIA_TYPE_AUDIO){
-            continue;
+
             //for audio packets simply mux them into output container.
             //no need to decode and encode them.
             output_stream = out_stream.format_ctx->streams[packet.stream_index];
@@ -414,8 +414,8 @@ int VideoFileInstance::startOverlaying(){
     }
     
     //at this point there are no more packet in container.
-    //but codec ca still contain some frames so flush them out.
-    AVPacket dummyPkt;
+    //but decoder can still contain some frames so flush them out.
+    AVPacket dummyPkt,encodedPacket;
     framesLeftInEncoder = 1;
     do {
         av_init_packet(&dummyPkt);
@@ -424,6 +424,51 @@ int VideoFileInstance::startOverlaying(){
         processVideoPacket(&dummyPkt, &frameEncodedCount , &framesLeftInEncoder);
         
     } while(framesLeftInEncoder);
+    
+    
+    //some codecs can delay delay some packets
+    //flush encoder now.
+    if ((this->out_stream.format_ctx->streams[VIDEO_STREAM_INDEX]->codec->codec->capabilities & AV_CODEC_CAP_DELAY)){
+        int encode_success = 0;
+        //AVFrame *dummyFrame = av_frame_alloc();
+        
+
+        do{
+            av_init_packet(&encodedPacket);
+            encodedPacket.data = NULL;
+            ret = avcodec_encode_video2(this->out_stream.format_ctx->streams[0]->codec,
+                                  &encodedPacket,
+                                  NULL,
+                                  &encode_success);
+            
+            if(ret  < 0){
+                av_log(NULL,AV_LOG_ERROR , "Error While flushing encoder");
+                break;
+            }
+            if(encode_success){
+                encodedPacket.stream_index = VIDEO_STREAM_INDEX;
+                
+                
+                av_packet_rescale_ts(&encodedPacket,
+                                     this->out_stream.format_ctx->streams[0]->codec->time_base,
+                                     this->out_stream.format_ctx->streams[0]->time_base);
+                
+                
+                ret = av_interleaved_write_frame(this->out_stream.format_ctx, &encodedPacket);
+                
+                
+                if(ret < 0){
+                    av_log(NULL,AV_LOG_ERROR , "Error writing  a frame to container...");
+                    return ret;
+                }
+
+            }
+            av_free_packet(&encodedPacket);
+            
+            
+        }while(encode_success);
+    }
+   
     
     ret = av_write_trailer(out_stream.format_ctx);
     if(ret < 0){

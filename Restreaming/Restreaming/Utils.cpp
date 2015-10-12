@@ -154,24 +154,24 @@ int open_outputfile_copy_codecs(const char *filename, OutputStream *outputStream
     }
     
     
-    //add audio stream
+//    add audio stream
     
-    //    AVCodec *audioCodec = avcodec_find_encoder(inputAudioCodecCtx->codec_id);
-    //    AVStream *audioStream = avformat_new_stream(ofmt_ctx, audioCodec);
-    //    if (!audioStream) {
-    //        fprintf(stderr, "Failed allocating output stream\n");
-    //        ret = AVERROR_UNKNOWN;
-    //        return ret;
-    //    }
-    //
-    //    ret = avcodec_copy_context(audioStream->codec, inputAudioCodecCtx);
-    //    if (ret < 0) {
-    //        fprintf(stderr, "Failed to copy context from input to output stream codec context\n");
-    //        return ret;
-    //    }
-    //    audioStream->codec->codec_tag = 0;
-    //    if (ofmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
-    //        audioStream->codec->flags |= CODEC_FLAG_GLOBAL_HEADER;
+        AVCodec *audioCodec = avcodec_find_encoder(inputAudioCodecCtx->codec_id);
+        AVStream *audioStream = avformat_new_stream(ofmt_ctx, audioCodec);
+        if (!audioStream) {
+            fprintf(stderr, "Failed allocating output stream\n");
+            ret = AVERROR_UNKNOWN;
+            return ret;
+        }
+    
+        ret = avcodec_copy_context(audioStream->codec, inputAudioCodecCtx);
+        if (ret < 0) {
+            fprintf(stderr, "Failed to copy context from input to output stream codec context\n");
+            return ret;
+        }
+        audioStream->codec->codec_tag = 0;
+        if (ofmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
+            audioStream->codec->flags |= CODEC_FLAG_GLOBAL_HEADER;
     
     
     av_dump_format(ofmt_ctx, 0, filename, 1);
@@ -200,8 +200,6 @@ int open_outputfile_copy_codecs(const char *filename, OutputStream *outputStream
 int open_outputfile(const char *filename,OutputStream *out_stream,AVFormatContext *inputFormatCtx){
     
     
-    
-    //cout<< boost::any_cast<AVRational>(videoOptions1["timebase"]);
     AVFormatContext *ofmt_ctx = NULL;
     AVCodec *video_codec      = NULL;
     int ret                   = 0;
@@ -213,11 +211,9 @@ int open_outputfile(const char *filename,OutputStream *out_stream,AVFormatContex
     add_stream(ofmt_ctx, &video_codec, inputFormatCtx->streams[0]);
     open_video(ofmt_ctx, video_codec, NULL);
     
+    //add audio stream
     if(inputFormatCtx->streams[1] != NULL) {
         add_stream_from_codec(ofmt_ctx,&audio_codec,inputFormatCtx->streams[1]->codec);
-        //ret = avcodec_copy_context(ofmt_ctx->streams[1]->codec, inputAudioCodec);
-        // open_audio(ofmt_ctx, audio_codec, NULL);
-        
     }
     
     
@@ -302,34 +298,40 @@ void add_stream(AVFormatContext *oc,
         exit(1);
     }
     out_stream->id = oc->nb_streams-1;
+
     c = out_stream->codec;
     //    avcodec_copy_context(c, ifmt_ctx->streams[0]->codec);
     switch ((*codec)->type) {
             
             
         case AVMEDIA_TYPE_VIDEO:
-            c->codec_id = inputStream->codec->codec_id;
             
-            
-            c->bit_rate = inputStream->codec->bit_rate;
-            
-            
+
+            c->codec_id                = inputStream->codec->codec_id;
+            c->bit_rate                = inputStream->codec->bit_rate;
+
             /* Resolution must be a multiple of two. */
-            c->width    = inputStream->codec->width;
-            c->height   = inputStream->codec->height;
-            c->gop_size = inputStream->codec->gop_size;
+            c->width                   = inputStream->codec->width;
+            c->height                  = inputStream->codec->height;
+            c->gop_size                = inputStream->codec->gop_size;
+
+            c->time_base               = inputStream->codec->time_base;
+            out_stream->time_base      = inputStream->time_base;
+
+            av_stream_set_r_frame_rate(out_stream,av_stream_get_r_frame_rate(inputStream));
+            out_stream->avg_frame_rate = inputStream->avg_frame_rate;
+
+            c->pix_fmt                 = AV_PIX_FMT_YUV420P;
+            c->sample_aspect_ratio.num = inputStream->codec->sample_aspect_ratio.num;
+            c->sample_aspect_ratio.den = inputStream->codec->sample_aspect_ratio.den;
+            c->ticks_per_frame         = inputStream->codec->ticks_per_frame;
+            out_stream->duration = inputStream->duration;
+
+
             
-            /* timebase: This is the fundamental unit of time (in seconds) in terms
-             * of which frame timestamps are represented. For fixed-fps content,
-             * timebase should be 1/framerate and timestamp increments should be
-             * identical to 1. */
+            //c->
             
             
-            c->time_base       = inputStream->codec->time_base;
-            out_stream->time_base = inputStream->time_base;
-            
-            // c->gop_size      = 12; /* emit one intra frame every twelve frames at most */
-            c->pix_fmt       = AV_PIX_FMT_YUV420P;
             if (c->codec_id == AV_CODEC_ID_MPEG2VIDEO) {
                 /* just for testing, we also add B frames */
                 c->max_b_frames = 2;

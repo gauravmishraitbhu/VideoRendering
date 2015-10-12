@@ -12,7 +12,6 @@
 		180984DF19FFB422006F923E /* mine.c in Sources */ = {isa = PBXBuildFile; fileRef = 180984DD19FFB422006F923E /* mine.c */; };
 		181C90EB1A0BC75D00DCBCD5 /* transcoding.c in Sources */ = {isa = PBXBuildFile; fileRef = 181C90E91A0BC75D00DCBCD5 /* transcoding.c */; };
 		18391DD31B6F6BE400C517F1 /* ImageSequence.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 18391DD11B6F6BE400C517F1 /* ImageSequence.cpp */; };
-		1849787A1A276A0400FC84AA /* complex_filter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 184978781A276A0400FC84AA /* complex_filter.cpp */; };
 		1870C1621BB0A1210075BE92 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1870C15F1BB0A1210075BE92 /* libavcodec.a */; };
 		1870C1631BB0A1210075BE92 /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1870C1601BB0A1210075BE92 /* libavformat.a */; };
 		1870C1641BB0A1210075BE92 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1870C1611BB0A1210075BE92 /* libavutil.a */; };
@@ -26,7 +25,6 @@
 		18D26F6E1BA098E400FE5515 /* Main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 18D26F6C1BA098E400FE5515 /* Main.cpp */; };
 		18D26F711BA09A7900FE5515 /* Utils2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 18D26F6F1BA09A7900FE5515 /* Utils2.cpp */; };
 		18E24E501B5D120600859ED3 /* OverlayAnimation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 18E24E4E1B5D120600859ED3 /* OverlayAnimation.cpp */; };
-		18E24E541B5D99AA00859ED3 /* transcoding_1.c in Sources */ = {isa = PBXBuildFile; fileRef = 18E24E521B5D99AA00859ED3 /* transcoding_1.c */; };
 		18E24E5E1B61969500859ED3 /* Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 18E24E5C1B61969500859ED3 /* Utils.cpp */; };
 /* End PBXBuildFile section */
 
@@ -50,13 +48,10 @@
 		180984D719FFADAD006F923E /* muxing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = muxing.h; sourceTree = "<group>"; };
 		180984DD19FFB422006F923E /* mine.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mine.c; sourceTree = "<group>"; };
 		180984DE19FFB422006F923E /* mine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mine.h; sourceTree = "<group>"; };
-		1818A2B31A445D9700C69467 /* libavcodec.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libavcodec.xcodeproj; path = ../../../../ffmpeg/libavcodec/libavcodec.xcodeproj; sourceTree = "<group>"; };
 		181C90E91A0BC75D00DCBCD5 /* transcoding.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = transcoding.c; sourceTree = "<group>"; };
 		181C90EA1A0BC75D00DCBCD5 /* transcoding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = transcoding.h; sourceTree = "<group>"; };
 		18391DD11B6F6BE400C517F1 /* ImageSequence.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ImageSequence.cpp; sourceTree = "<group>"; };
 		18391DD21B6F6BE400C517F1 /* ImageSequence.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageSequence.h; sourceTree = "<group>"; };
-		184978781A276A0400FC84AA /* complex_filter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = complex_filter.cpp; sourceTree = "<group>"; };
-		184978791A276A0400FC84AA /* complex_filter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = complex_filter.h; sourceTree = "<group>"; };
 		1870C15F1BB0A1210075BE92 /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavcodec.a; path = ../../../../../../usr/local/Cellar/ffmpeg/2.8/lib/libavcodec.a; sourceTree = "<group>"; };
 		1870C1601BB0A1210075BE92 /* libavformat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavformat.a; path = ../../../../../../usr/local/Cellar/ffmpeg/2.8/lib/libavformat.a; sourceTree = "<group>"; };
 		1870C1611BB0A1210075BE92 /* libavutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavutil.a; path = ../../../../../../usr/local/Cellar/ffmpeg/2.8/lib/libavutil.a; sourceTree = "<group>"; };
@@ -78,8 +73,6 @@
 		18D26F701BA09A7900FE5515 /* Utils2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Utils2.h; sourceTree = "<group>"; };
 		18E24E4E1B5D120600859ED3 /* OverlayAnimation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OverlayAnimation.cpp; sourceTree = "<group>"; };
 		18E24E4F1B5D120600859ED3 /* OverlayAnimation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OverlayAnimation.h; sourceTree = "<group>"; };
-		18E24E521B5D99AA00859ED3 /* transcoding_1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = transcoding_1.c; sourceTree = "<group>"; };
-		18E24E531B5D99AA00859ED3 /* transcoding_1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = transcoding_1.h; sourceTree = "<group>"; };
 		18E24E5C1B61969500859ED3 /* Utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Utils.cpp; sourceTree = "<group>"; };
 		18E24E5D1B61969500859ED3 /* Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Utils.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -116,7 +109,6 @@
 				18D26F661BA0896200FE5515 /* libboost_chrono.a */,
 				18D26F641BA0843600FE5515 /* libcpprest.2.6.dylib */,
 				18D26F5E1BA0632B00FE5515 /* libmicrohttpd.a */,
-				1818A2B31A445D9700C69467 /* libavcodec.xcodeproj */,
 				180984BF19FE6F84006F923E /* Restreaming */,
 				180984BE19FE6F84006F923E /* Products */,
 			);
@@ -151,18 +143,9 @@
 			path = Restreaming;
 			sourceTree = "<group>";
 		};
-		1818A2B41A445D9700C69467 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		18D26F721BA09DF800FE5515 /* old */ = {
 			isa = PBXGroup;
 			children = (
-				18E24E521B5D99AA00859ED3 /* transcoding_1.c */,
-				18E24E531B5D99AA00859ED3 /* transcoding_1.h */,
 				180984D319FED728006F923E /* remux.c */,
 				180984D419FED728006F923E /* remux.h */,
 				180984D619FFADAD006F923E /* muxing.c */,
@@ -173,8 +156,6 @@
 				181C90EA1A0BC75D00DCBCD5 /* transcoding.h */,
 				18C5768E1A122F6E00ED6C94 /* myLib.c */,
 				18C5768F1A122F6E00ED6C94 /* myLib.h */,
-				184978781A276A0400FC84AA /* complex_filter.cpp */,
-				184978791A276A0400FC84AA /* complex_filter.h */,
 			);
 			name = old;
 			sourceTree = "<group>";
@@ -223,12 +204,6 @@
 			mainGroup = 180984B419FE6F84006F923E;
 			productRefGroup = 180984BE19FE6F84006F923E /* Products */;
 			projectDirPath = "";
-			projectReferences = (
-				{
-					ProductGroup = 1818A2B41A445D9700C69467 /* Products */;
-					ProjectRef = 1818A2B31A445D9700C69467 /* libavcodec.xcodeproj */;
-				},
-			);
 			projectRoot = "";
 			targets = (
 				180984BC19FE6F84006F923E /* Restreaming */,
@@ -250,8 +225,6 @@
 				18C576901A122F6E00ED6C94 /* myLib.c in Sources */,
 				18D26F6E1BA098E400FE5515 /* Main.cpp in Sources */,
 				18D26F631BA0635700FE5515 /* Api.cpp in Sources */,
-				1849787A1A276A0400FC84AA /* complex_filter.cpp in Sources */,
-				18E24E541B5D99AA00859ED3 /* transcoding_1.c in Sources */,
 				18E24E501B5D120600859ED3 /* OverlayAnimation.cpp in Sources */,
 				180984D519FED728006F923E /* remux.c in Sources */,
 			);

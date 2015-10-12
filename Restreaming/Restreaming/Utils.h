@@ -28,14 +28,27 @@ extern "C"{
 
 int open_input_file(const char *filename,AVFormatContext ** ifmt_ctx);
 
+
+/**
+ *  creates and open a file for muxing audio and video packets.
+ *
+ *  @param filename    outfile name. absolute path.
+ *  @param out_stream  handle for output file's AVFormatCtx
+ *  @param inputFmtCtx handle of input AVFormatCtx
+ *
+ *  @return <#return value description#>
+ */
 int open_outputfile(const char *filename,OutputStream *out_stream,AVFormatContext *inputFmtCtx);
 
 
+
 /**
- adds a single stream to a container using the codec id provided
- @param oc - output format context
- @param codec - the reference to codec.
- @param codec_id - requested codec id
+ *  adds a single stream to a container using the codec id provided
+ *
+ *  @param oc          outputfile's formatCtx instance
+ *  @param codec       codec instance whose value will be set by this function.
+ *  @param inputStream corresponsing input stream . if you want to add a video stream to container 
+                        value should represent video stream of input file.
  */
 void add_stream(AVFormatContext *oc,
                 AVCodec **codec,
