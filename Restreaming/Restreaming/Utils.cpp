@@ -325,8 +325,9 @@ void add_stream(AVFormatContext *oc,
             c->sample_aspect_ratio.num = inputStream->codec->sample_aspect_ratio.num;
             c->sample_aspect_ratio.den = inputStream->codec->sample_aspect_ratio.den;
             c->ticks_per_frame         = inputStream->codec->ticks_per_frame;
-            out_stream->duration = inputStream->duration;
-
+            c->profile                 = inputStream->codec->profile;
+            out_stream->duration       = inputStream->duration;
+            
 
             
             //c->

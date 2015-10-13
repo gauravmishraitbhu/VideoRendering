@@ -232,9 +232,6 @@ int VideoFileInstance::processVideoPacket(AVPacket *packet , int *frameEncodedCo
     }
     
     
-    int64_t pts;
-    
-    
     ret = avcodec_decode_video2(in_stream->codec,
                                 contentVideoFrame,
                                 &frame_decoded,
@@ -322,7 +319,7 @@ int VideoFileInstance::processVideoPacket(AVPacket *packet , int *frameEncodedCo
         
         //encode and write the frame to container
         av_init_packet(&encodedPacket);
-     
+    
         encodeWriteFrame(contentVideoFinalYUV, &encodedPacket,&encode_success);
         
         //cleanup
@@ -369,8 +366,6 @@ int VideoFileInstance::startOverlaying(){
     
     int frameEncodedCount=0;
     
-    
-    
     while(1){
         
         
@@ -402,9 +397,7 @@ int VideoFileInstance::startOverlaying(){
             
             continue;
         }else{
-            //for now ignore audio packets later will just mux audio packets
-            //into the container currently the contaner doesnt have the
-            //audi channel
+            
             if(in_stream->codec->codec_type != AVMEDIA_TYPE_VIDEO){
                 continue;
             }
