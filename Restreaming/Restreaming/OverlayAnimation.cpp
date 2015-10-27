@@ -287,7 +287,7 @@ int VideoFileInstance::processVideoPacket(AVPacket *packet , int *frameEncodedCo
             
             ImageFrame * imageFrame = imageSequence->getFrame(timebase,ptsFactor,*frameEncodedCount+1);
             
-            if(imageFrame != NULL){
+            if(imageFrame != NULL && imageFrame->hasDecodedFrame()){
 //                int animationFrameHeight = imageFrame->getHeight();
 //                int animationFrameWidth = imageFrame->getWidth();
                 

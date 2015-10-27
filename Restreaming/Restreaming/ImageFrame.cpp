@@ -17,6 +17,7 @@ ImageFrame::ImageFrame(){
     this->bottom = 0;
     this->right = 0;
     this->frameFileName = "";
+    this->decodedFrame = NULL;
 }
 
 int ImageFrame::getHeight(){
@@ -30,7 +31,12 @@ int ImageFrame::getWidth() {
 }
 
 bool ImageFrame::hasDecodedFrame(){
-    return !(decodedFrame == NULL);
+    if (this->decodedFrame == NULL) {
+        return false;
+    } else {
+        return true;
+    }
+//    return !(decodedFrame == NULL);
 }
 
 void ImageFrame::freeDecodedFrame(){

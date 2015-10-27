@@ -239,10 +239,9 @@ ImageFrame* ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor
             if(frameDecoded){
                 //at this point frame points to a decoded frame so
                 //job done for this function
-                
+                cout << "decoding new frame \t"<<currentFrameNum<<"\n";
                 av_free_packet(&packet);
                 gotFrame = true;
-                //copy frame and return;
                 
                 //cleanup older frame
                 if(currFrame != NULL && currFrame->hasDecodedFrame()){
@@ -250,6 +249,11 @@ ImageFrame* ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor
                     currFrame->freeDecodedFrame();
                 }
                 currFrame = imageFrame;
+                
+                //HACK -- need to clone the frame for
+                //some reason when not cloning and returning the same frame
+                // on next call of this function ie (nextFrame == currFrame)
+                //then the output frame is flickering and not displaying proper.
                 currFrame->decodedFrame = av_frame_clone(frame);
                 av_frame_free(&frame);
                 break;
@@ -262,7 +266,10 @@ ImageFrame* ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor
             
         }
         
-    } //end of if (nextFrame>currFrame)
+    }else{
+        cout << "return old frame \t"<<currentFrameNum<<"\n";
+        
+    }//end of if (nextFrame>currFrame)
     
     closeFile();
     

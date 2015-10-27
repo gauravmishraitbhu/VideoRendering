@@ -66,7 +66,7 @@ private:
     int height,width;
     
     const char *baseFileName;
-    ImageFrame *currFrame;
+    ImageFrame *currFrame = NULL;
     AVFormatContext *ifmt_ctx = NULL;
     
     void cleanup();
