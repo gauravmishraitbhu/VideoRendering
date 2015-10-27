@@ -51,7 +51,7 @@ class Task{
     {
         try{
         
-        ImageSequence *imageSequence  = new ImageSequence(animationPath.c_str(),1,0,fps,maxFrames); //12,653
+        ImageSequence *imageSequence  = new ImageSequence(animationPath.c_str()); //12,653
         
         VideoFileInstance *contentVideo = new VideoFileInstance(1,imageSequence,
                                                                 videoPath.c_str(),

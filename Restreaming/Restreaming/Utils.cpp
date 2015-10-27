@@ -13,16 +13,13 @@ extern "C"{
     
     
 #include <libavutil/opt.h>
-#include <libavutil/pixfmt.h>
-    
-    //#include <>
-    
 }
 
 
 #include "Utils.h"
 #include "Utils2.h"
 #include <iostream>
+#include "ImageFrame.h"
 using namespace std;
 
 
@@ -326,6 +323,7 @@ void add_stream(AVFormatContext *oc,
             c->sample_aspect_ratio.den = inputStream->codec->sample_aspect_ratio.den;
             c->ticks_per_frame         = inputStream->codec->ticks_per_frame;
             c->profile                 = inputStream->codec->profile;
+            c->level                   = inputStream->codec->level;
             out_stream->duration       = inputStream->duration;
             
 
@@ -442,8 +440,15 @@ void open_audio(AVFormatContext *oc, AVCodec *codec, AVDictionary *opt_arg)
     
 }
 
+int copyVideoPixelsRGBA (ImageFrame *imageFrame , AVFrame **destFrame , int dstHeight , int dstWidth){
+    
+    return copyVideoPixelsRGBA(imageFrame->decodedFrame , destFrame , imageFrame->getHeight() , imageFrame->getWidth() ,
+                        dstHeight , dstWidth , imageFrame->top , imageFrame->left);
+    
+}
 
-int copyVideoPixelsRGBA(AVFrame **fromFrame, AVFrame **destFrame, int srcHeight , int srcWidth,int dstHeight,int dstWidth) {
+int copyVideoPixelsRGBA(AVFrame *fromFrame, AVFrame **destFrame, int srcHeight , int srcWidth,int dstHeight,int dstWidth,
+                        int startRow , int startCol) {
     int ret=0;
     
     uint8_t srcPixelRed , srcPixelGreen , srcPixelBlue;
@@ -453,10 +458,10 @@ int copyVideoPixelsRGBA(AVFrame **fromFrame, AVFrame **destFrame, int srcHeight 
     uint8_t dstPixelRed , dstPixelGreen , dstPixelBlue;
     int srcRow=0 , srcCol=0 ;   //srcRow from 0 to height
     int dstRow = 0,dstCol = 0 ;
-    int startRow=0 , startCol = 0; //starting coordinates in content frame where
+    //int startRow=0 , startCol = 0; //starting coordinates in content frame where
     
     int srcLinesize=0,destLinesize=0;
-    srcLinesize = (*fromFrame)->linesize[0];
+    srcLinesize = (fromFrame)->linesize[0];
     destLinesize = (*destFrame)->linesize[0];
     
     
@@ -472,15 +477,15 @@ int copyVideoPixelsRGBA(AVFrame **fromFrame, AVFrame **destFrame, int srcHeight 
                 continue;
             }
             
-            srcPixelRed = (*fromFrame)->data[0][srcRow * srcLinesize + 4*srcCol];
-            srcPixelGreen = (*fromFrame)->data[0][srcRow * srcLinesize + 4*srcCol + 1];
-            srcPixelBlue = (*fromFrame)->data[0][srcRow * srcLinesize + 4*srcCol + 2];
+            srcPixelRed = (fromFrame)->data[0][srcRow * srcLinesize + 4*srcCol];
+            srcPixelGreen = (fromFrame)->data[0][srcRow * srcLinesize + 4*srcCol + 1];
+            srcPixelBlue = (fromFrame)->data[0][srcRow * srcLinesize + 4*srcCol + 2];
             
             
             //            if(srcPixelRed == 255 && srcPixelGreen == 255 && srcPixelBlue == 255){
             //                continue;
             //            }
-            srcPixelAlpha = float( (*fromFrame)->data[0][srcRow * srcLinesize + 4*srcCol + 3]);
+            srcPixelAlpha = float( (fromFrame)->data[0][srcRow * srcLinesize + 4*srcCol + 3]);
             srcPixelAlpha = (float)srcPixelAlpha / (float)255;
             
             

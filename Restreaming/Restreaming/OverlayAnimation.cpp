@@ -27,7 +27,6 @@ extern "C"{
 #include <libavdevice/avdevice.h>
 #include <libswscale/swscale.h>
 #include <libavutil/pixdesc.h>
-#include <libavutil/pixfmt.h>
 #include <libavutil/time.h>
     
 }
@@ -39,6 +38,7 @@ extern "C"{
 #include <thread>
 #include <boost/any.hpp>
 #include "ImageSequence.h"
+#include "ImageFrame.h"
 
 #include <cpprest/http_client.h>
 #include <cpprest/json.h>
@@ -285,15 +285,14 @@ int VideoFileInstance::processVideoPacket(AVPacket *packet , int *frameEncodedCo
         
         if(wallClockTimeContentVideo > animatonTimeOffset){
             
-            AVFrame * imageFrame = imageSequence->getFrame(timebase,ptsFactor,*frameEncodedCount+1);
+            ImageFrame * imageFrame = imageSequence->getFrame(timebase,ptsFactor,*frameEncodedCount+1);
             
             if(imageFrame != NULL){
-                int animationFrameHeight = imageSequence->getVideoHeight();
-                int animationFrameWidth = imageSequence->getVideoWidth();
+//                int animationFrameHeight = imageFrame->getHeight();
+//                int animationFrameWidth = imageFrame->getWidth();
                 
-                copyVideoPixelsRGBA(&imageFrame ,
+                copyVideoPixelsRGBA(imageFrame ,
                                     &contentVideoRGB,
-                                    animationFrameHeight , animationFrameWidth,
                                     contentFrameHeight , contentFrameWidth);
                 
                 

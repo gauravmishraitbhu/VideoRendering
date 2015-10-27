@@ -24,6 +24,7 @@ extern "C"{
 }
 
 #include "Utils2.h"
+#include "ImageFrame.h"
 
 
 int open_input_file(const char *filename,AVFormatContext ** ifmt_ctx);
@@ -95,4 +96,7 @@ int copyVideoPixels(AVFrame **srcFrame, AVFrame **destFrame , int srcHeight , in
  @param srcFrame - rgba frame from which pixels need to be copy.
  @param destFrame - rgb24 frame to which pixels needs to be copied.
  */
-int copyVideoPixelsRGBA(AVFrame **srcFrame, AVFrame **destFrame , int srcHeight , int srcWidth, int dstHeight,int destWidth);
+int copyVideoPixelsRGBA(AVFrame *srcFrame, AVFrame **destFrame , int srcHeight , int srcWidth, int dstHeight,int destWidth,
+                        int startRow , int startCol);
+
+int copyVideoPixelsRGBA (ImageFrame *imageFrame , AVFrame **destFrame , int dstHeight , int dstWidth);

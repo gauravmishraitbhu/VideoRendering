@@ -7,24 +7,92 @@
 //
 
 #include "ImageSequence.h"
-
+#include "ImageFrame.h"
 #include <string>
+#include <cpprest/json.h>
 
 
 using namespace std;
+using namespace web;
+typedef web::json::value JsonValue;
 
-
-
-ImageSequence::ImageSequence(const char *fileName,int initialFile,float offsetTime,int _fps,int maxNumFrames){
-    this->baseFileName = fileName;
-    this->intitialFileSeqCnt = initialFile;
+ImageSequence::ImageSequence(const char *baseFileName){
+    this->baseFileName = baseFileName;
     
-    currentFrameNum = -1;
-    fps = _fps;
-    maxNumofFrames = maxNumFrames;
-    this->offsetTime = offsetTime;
-    
+    std::string metaFile = std::string(baseFileName) + "/overlay-metadata.json";
+    parseMetaFile(metaFile.c_str());
 }
+
+static ImageFrame * ParseFrameJson(const JsonValue& json){
+    ImageFrame *frame = new ImageFrame();
+    for (auto iter = json.as_object().cbegin(); iter != json.as_object().cend(); ++iter){
+        
+        const std::string &key = iter->first;
+        const json::value &v = iter->second;
+        
+        if(key == "frameIndex"){
+            frame->frameIndex = v.as_integer();
+        }else if(key == "skipFrame"){
+            frame->skipFrame = v.as_bool();
+        }else if(key == "frameFileName"){
+            frame->frameFileName = v.as_string();
+        }else if(key == "left"){
+            frame->left = v.as_integer();
+        }else if(key == "top"){
+            frame->top = v.as_integer();
+        }else if(key == "right"){
+            frame->right = v.as_integer();
+        }else if(key == "bottom"){
+            frame->bottom = v.as_integer();
+        }
+    }
+    
+    return frame;
+}
+
+void ImageSequence::readJson(const JsonValue& json)
+{
+    wcout << "parsing json file \n";
+    for (auto iter = json.as_object().cbegin(); iter != json.as_object().cend(); ++iter)
+    {
+        const std::string &key = iter->first;
+        const json::value &v = iter->second;
+        if(key == "fps"){
+            this->fps = v.as_integer();
+        }else if(key == "frameCount"){
+            this->maxNumofFrames = v.as_integer();
+        }else if(key == "startTime"){
+            this->offsetTime = v.as_double();
+        }else if(key == "z-index"){
+            this->zIndex = v.as_integer();
+        }else if(key == "frames"){
+            json::array frames = v.as_array();
+            
+            for(int i = 0 ; i<frames.size() ; i++){
+                JsonValue arrayVal = frames.at(i);
+                
+                ImageFrame *frame = ParseFrameJson(arrayVal);
+                std::string key = std::to_string(frame->frameIndex);
+                
+                frameMap[key] = frame;
+            }
+        }
+        
+    }
+    
+    this->maxNumofFrames = frameMap.size();
+    wcout << "parsing json file complete. total frames"<<maxNumofFrames<<"\n";
+}
+
+
+void ImageSequence::parseMetaFile(const char *metaFileName){
+    std::ifstream jsonFile(metaFileName);
+    std::ostringstream tmp;
+    json::value jsonVal;
+    jsonVal = jsonVal.parse(jsonFile);
+    readJson(jsonVal);
+}
+
 
 float ImageSequence::getOffetTime(){
     return offsetTime;
@@ -44,7 +112,7 @@ int ImageSequence::openFile(const char *fileName){
     int ret = 0;
     unsigned int i;
     
-   
+    
     
     
     if ((ret = avformat_open_input(&ifmt_ctx, fileName, NULL, NULL)) < 0) {
@@ -86,10 +154,10 @@ int ImageSequence::openFile(const char *fileName){
     return ret;
     
     
-   // av_log(NULL,AV_LOG_INFO,"opened first file");
+    // av_log(NULL,AV_LOG_INFO,"opened first file");
 }
 
-AVFrame * ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,int contentVideoPts){
+ImageFrame* ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,int contentVideoPts){
     
     
     int nextFrameNum = calculateNextFrameNumber(contentVideoTimeBase,  ptsFactor,contentVideoPts);
@@ -102,9 +170,23 @@ AVFrame * ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,i
     //decode next frame only when required.
     if(nextFrameNum > currentFrameNum){
         currentFrameNum = nextFrameNum;
-        int currSeq = intitialFileSeqCnt + currentFrameNum - 1;
+        int currSeq =  currentFrameNum - 1;
         
-        std::string completeName = std::string(baseFileName) + std::string("frame")+std::to_string(currSeq) + std::string(".png");
+        //check if meta for this frame exists
+        if(frameMap.find(std::to_string(currSeq)) == frameMap.end()){
+            return NULL;
+        }
+        
+        
+        ImageFrame *imageFrame = frameMap[std::to_string(currSeq)];
+        
+        //check if current frame has any image associated with it.
+        if(imageFrame->skipFrame == true){
+            return NULL;
+        }
+        
+        
+        std::string completeName = std::string(baseFileName) + std::string("/frames/")+ imageFrame->frameFileName;
         ret = openFile(completeName.c_str());
         if(ret < 0){
             av_log(NULL, AV_LOG_ERROR, "Error opening a image file.... %s" , completeName.c_str());
@@ -129,7 +211,7 @@ AVFrame * ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,i
             
             if(ret < 0){
                 av_log(NULL,AV_LOG_ERROR,"no more frames left to be read");
-                currFrame = NULL;
+                currFrame->freeDecodedFrame();
                 return currFrame ;
             }
             
@@ -163,13 +245,12 @@ AVFrame * ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,i
                 //copy frame and return;
                 
                 //cleanup older frame
-                if(currFrame != NULL){
+                if(currFrame != NULL && currFrame->hasDecodedFrame()){
                     
-                    av_frame_unref(currFrame);
-                    av_frame_free(&currFrame);
+                    currFrame->freeDecodedFrame();
                 }
-                
-                currFrame = av_frame_clone(frame);
+                currFrame = imageFrame;
+                currFrame->decodedFrame = av_frame_clone(frame);
                 av_frame_free(&frame);
                 break;
             }else{
@@ -180,7 +261,7 @@ AVFrame * ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,i
             
             
         }
-    
+        
     } //end of if (nextFrame>currFrame)
     
     closeFile();
@@ -221,3 +302,17 @@ int ImageSequence::getVideoHeight() {
 int ImageSequence::getVideoWidth() {
     return width;
 }
+
+void ImageSequence::cleanup(){
+    
+    for( int i=0 ; i<maxNumofFrames ;i++){
+        delete (frameMap[std::to_string(i)]);
+    }
+    
+   
+}
+
+//int main(){
+//    ImageSequence *s = new ImageSequence("/Users/apple/temp/html-renderer/output/4");
+//    
+//}
