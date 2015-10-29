@@ -28,7 +28,15 @@ extern "C"{
 class VideoFileInstance {
     
 public:
-    VideoFileInstance(int ,ImageSequence *, const char *,const char *,int );
+    /**
+     *  @param type - 
+        @param imageSeq - pointer to array of *imageSeq
+        @param numImageSequence - num of template animations
+        @param filename - input file name
+        @param outputFile - outputfile name
+        @param reportStatusEnabled - wheather to report the status of current job to a extrnal api
+     */
+    VideoFileInstance(int type,ImageSequence **imageSeq,int numImageSequence , const char *filename , const char *outputFile,int reportStatusEnabled );
     
     /**
      opens the provided input and output files. returns 0 is both are successfull. else 
@@ -87,11 +95,15 @@ private:
     int VIDEO_STREAM_INDEX = 0;
     int VIDEO_TYPE_CONTENT = 1 , VIDEO_TYPE_ANIMATION = 2;
     int videoType; //1 = content video 2 = animation video
+    
     AVFormatContext *ifmt_ctx = NULL;
     OutputStream out_stream;
     struct SwsContext *imgConvertCtxYUVToRGB = NULL;
     struct SwsContext *imgConvertCtxRGBToYUV = NULL;
-    ImageSequence *imageSequence;
+    
+    //pointer to array of *imageSequence
+    ImageSequence **imageSequenceList;
+    int numImageSequence = 0;
     //for opening file and decoder etc
     int openFile();
     //should apply for main video
@@ -100,6 +112,16 @@ private:
     int convertToRGBFrame(AVFrame **,AVFrame **);
     int convertToYuvFrame(AVFrame ** , AVFrame **);
     
+    
+    /**
+     *  simpley mux the audio packet from input container to output container.
+     *
+     *  @param AVPacket the audio packet which needs to be muxed
+     *  @param AVStream source stream from which packet is taken
+     *  @param AVStream destination stream where packet needs to be muxed
+     *
+     *  @return 0 on success , -1 if unsuccessfull
+     */
     int processAudioPacket(AVPacket * , AVStream *, AVStream *);
     
     int64_t videoDuration;
@@ -107,13 +129,13 @@ private:
     /**
      *  calls external rest api to inform about how much percent of current rendering is done.
      *
-     *  @param percent <#percent description#>
+     *  @param percent value between 0 and 100
      */
     void reportStatus(int percent);
     
     
     /**
-     @param AVPacket * - the packet read from input container.
+     @param AVPacket * - the video packet read from input container.
      if pkt.data = null then code will try to flush remaining frames from encoder.
      
      @param frameCount - total number of frames that have been encoded and muxed into container.
@@ -133,7 +155,7 @@ private:
      *  @param encode_success 0/1 depending on encode was success. sometimes even though no errors
                               this will be 0. this can happen in some encoders which have delay.
      *
-     *  @return 0 is all is well.
+     *  @return 0 if all is well.
      */
     int encodeWriteFrame(AVFrame *contentFrame,AVPacket *packet ,int *encode_success);
 };

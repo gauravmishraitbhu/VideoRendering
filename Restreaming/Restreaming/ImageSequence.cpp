@@ -16,10 +16,10 @@ using namespace std;
 using namespace web;
 typedef web::json::value JsonValue;
 
-ImageSequence::ImageSequence(const char *baseFileName){
+ImageSequence::ImageSequence(string baseFileName){
     this->baseFileName = baseFileName;
     
-    std::string metaFile = std::string(baseFileName) + "/overlay-metadata.json";
+    std::string metaFile = baseFileName + "/overlay-metadata.json";
     parseMetaFile(metaFile.c_str());
 }
 
@@ -40,10 +40,6 @@ static ImageFrame * ParseFrameJson(const JsonValue& json){
             frame->left = v.as_integer();
         }else if(key == "top"){
             frame->top = v.as_integer();
-        }else if(key == "right"){
-            frame->right = v.as_integer();
-        }else if(key == "bottom"){
-            frame->bottom = v.as_integer();
         }
     }
     
@@ -161,6 +157,12 @@ ImageFrame* ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor
     
     
     int nextFrameNum = calculateNextFrameNumber(contentVideoTimeBase,  ptsFactor,contentVideoPts);
+    
+    //this means that the current time in content video is less than the
+    //animation start time
+    if(nextFrameNum < 0){
+        return NULL;
+    }
     int ret = 0;
     //responsility of caller to handle NULL
     if(nextFrameNum > maxNumofFrames){
@@ -186,7 +188,7 @@ ImageFrame* ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor
         }
         
         
-        std::string completeName = std::string(baseFileName) + std::string("/frames/")+ imageFrame->frameFileName;
+        std::string completeName = baseFileName + std::string("/frames/")+ imageFrame->frameFileName;
         ret = openFile(completeName.c_str());
         if(ret < 0){
             av_log(NULL, AV_LOG_ERROR, "Error opening a image file.... %s" , completeName.c_str());
@@ -239,7 +241,7 @@ ImageFrame* ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor
             if(frameDecoded){
                 //at this point frame points to a decoded frame so
                 //job done for this function
-                cout << "decoding new frame \t"<<currentFrameNum<<"\n";
+                cout << "decoding new frame \t"<<currentFrameNum<<"\t"<<baseFileName<<"\n";
                 av_free_packet(&packet);
                 gotFrame = true;
                 
@@ -248,7 +250,11 @@ ImageFrame* ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor
                     
                     currFrame->freeDecodedFrame();
                 }
+                
                 currFrame = imageFrame;
+                imageFrame->setWidth(in_stream->codec->width);
+                imageFrame->setHeight(in_stream->codec->height);
+                
                 
                 //HACK -- need to clone the frame for
                 //some reason when not cloning and returning the same frame
@@ -277,18 +283,31 @@ ImageFrame* ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor
 }
 
 int ImageSequence::calculateNextFrameNumber(float contentVideoTimeBase ,float ptsFactor ,int contentVideoPts){
-    if(currentFrameNum == -1){
-        //first time call.
-        return 1;
-    }
+    
     
     float wallClockTimeContentVideo = contentVideoTimeBase * contentVideoPts * ptsFactor;
+    
+    //the time for rendering this animation has not come yet
+    //return -1
+    //for eg - wallClockTimeContentVideo = 5 and animation is supposed to start at 6
+    //then dont return any frame
+    if(wallClockTimeContentVideo < offsetTime){
+        return -1;
+    }
+
     
     //if animation video is supposed to be delayed by some time then the above time needs to be
     //adjusted by subtracting the offset time eg if offset is 5 sec and absolute walltime comes
     //out to be 6 secs then we need to show the frame which is supposed to be at t=1 secs
     
     wallClockTimeContentVideo = wallClockTimeContentVideo - offsetTime;
+    
+    
+    
+    if(currentFrameNum == -1){
+        //first time call.
+        return 1;
+    }
     
     //the time till which current frame needs to be displayed
     float wallClockTimeForCurrentAnimationFrame = float(1/(float)fps) * currentFrameNum;
@@ -311,7 +330,9 @@ int ImageSequence::getVideoWidth() {
 }
 
 void ImageSequence::cleanup(){
-    
+    if(currFrame != NULL){
+        currFrame->freeDecodedFrame();
+    }
     for( int i=0 ; i<maxNumofFrames ;i++){
         delete (frameMap[std::to_string(i)]);
     }

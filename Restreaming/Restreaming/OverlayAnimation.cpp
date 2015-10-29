@@ -90,12 +90,42 @@ public:
 };
 
 
+VideoFileInstance::VideoFileInstance(int type,ImageSequence * _imageSequenceList[],int numImageSequence ,
+                                     const char *filename , const char *outputFile,int reportStatusEnabled){
+    cout<< "creating instance of video file. of type  " << type << "\n";
+    this->videoType           = type;
+    this->fileName            = filename;
+    this->imageSequenceList   = _imageSequenceList;
+    this->numImageSequence    = numImageSequence;
+    this->outputFilePath      = outputFile;
+    this->reportStatusEnabled = reportStatusEnabled;
+    
+    //sort the imageSequenceList on the basis of zIndex
+    for( int i=0;i<numImageSequence ;i++){
+        for(int j=i+1 ; j<numImageSequence ; j++){
+            if(imageSequenceList[i]->getZIndex() > imageSequenceList[j]->getZIndex()){
+                //swap the pointers
+                
+                ImageSequence *temp = imageSequenceList[i];
+                imageSequenceList[i] = imageSequenceList[j];
+                imageSequenceList[j] = temp;
+            }
+        }
+    }
+    
+    
+    //cout<<imageSequenceList[0]->getZIndex();
+}
 
 int VideoFileInstance::cleanup(){
     
+    //close video encoder
     avcodec_close(out_stream.format_ctx->streams[0]->codec);
+    
+    //close video decoder
     avcodec_close(ifmt_ctx->streams[0]->codec);
     
+    //release input file context
     avformat_close_input(&ifmt_ctx);
     
     
@@ -109,7 +139,13 @@ int VideoFileInstance::cleanup(){
         avformat_free_context(out_stream.format_ctx);
     }
     
+    sws_freeContext(imgConvertCtxRGBToYUV);
+    sws_freeContext(imgConvertCtxYUVToRGB);
     
+    for(int i=0; i<numImageSequence; i++){
+        imageSequenceList[i]->cleanup();
+        delete imageSequenceList[i];
+    }
     
     
     return 0;
@@ -117,28 +153,10 @@ int VideoFileInstance::cleanup(){
 
 int VideoFileInstance::openOutputFile() {
     
-    std::map<string,boost::any> videoOptions ;
-    AVCodecContext *videoCodecCtx , *audioCodecCtx;
-    videoCodecCtx = ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec;
-    videoOptions["bitrate"] = (int)(videoCodecCtx->bit_rate);
-    videoOptions["timebase_denominator"] = videoCodecCtx->time_base.den;
-    videoOptions["timebase_numerator"] = videoCodecCtx->time_base.num;
-    
-    audioCodecCtx = ifmt_ctx->streams[1]->codec;
-    videoOptions["frame_size"] = audioCodecCtx->frame_size;
-    videoOptions["audio_bitrate"] = audioCodecCtx->bit_rate;
-    videoOptions["audio_sample_rate"] = audioCodecCtx->sample_rate;
-    videoOptions["channel_layout"] = audioCodecCtx->channel_layout;
-    
-    cout << boost::any_cast<int>(videoOptions["bitrate"]);
-    
-    int ret = open_outputfile(outputFilePath,
+        int ret = open_outputfile(outputFilePath,
                               &out_stream,ifmt_ctx);
     
-    //    int ret = open_outputfile_copy_codecs(outputFilePath , &out_stream , ifmt_ctx->streams[0]->codec,ifmt_ctx->streams[1]->codec,ifmt_ctx);
-    
-    
-    return ret;
+        return ret;
     
 }
 
@@ -269,7 +287,7 @@ int VideoFileInstance::processVideoPacket(AVPacket *packet , int *frameEncodedCo
         int contentFrameWidth = this->getVideoWidth();
         
         float wallClockTimeContentVideo = timebase * ((*frameEncodedCount)+1) * ptsFactor;
-        float animatonTimeOffset = imageSequence->getOffetTime();
+        
         
         float currentPercent = wallClockTimeContentVideo/(float)videoDuration;
         
@@ -283,8 +301,13 @@ int VideoFileInstance::processVideoPacket(AVPacket *packet , int *frameEncodedCo
             lastReportedPercent = nearestPercent;
         }
         
-        if(wallClockTimeContentVideo > animatonTimeOffset){
+        
+        //for all the animation try to get image frame from each of them
+        //and overlay them 1 by 1.
+        //TODO there might be better way to overlay all image frames at once
+        for(int k=0 ; k<numImageSequence ; k++){
             
+            ImageSequence *imageSequence = imageSequenceList[k];
             ImageFrame * imageFrame = imageSequence->getFrame(timebase,ptsFactor,*frameEncodedCount+1);
             
             if(imageFrame != NULL && imageFrame->hasDecodedFrame()){
@@ -322,8 +345,10 @@ int VideoFileInstance::processVideoPacket(AVPacket *packet , int *frameEncodedCo
         encodeWriteFrame(contentVideoFinalYUV, &encodedPacket,&encode_success);
         
         //cleanup
+        
         av_freep(contentVideoRGB->data);
         av_frame_free(&contentVideoRGB);
+        
         
         av_frame_free(&contentVideoFrame);
         
@@ -769,19 +794,6 @@ int VideoFileInstance::openFile() {
     
 }
 
-
-
-
-VideoFileInstance::VideoFileInstance(int type,ImageSequence * imageSeq , const char *filename , const char *outputFile,int reportStatusEnabled){
-    cout<< "creating instance of video file. of type  " << type << "\n";
-    this->videoType           = type;
-    this->fileName            = filename;
-    this->imageSequence       = imageSeq;
-    this->outputFilePath      = outputFile;
-    this->reportStatusEnabled = reportStatusEnabled;
-    
-    
-}
 
 int VideoFileInstance::openInputAndOutputFiles(){
     int ret = openFile();

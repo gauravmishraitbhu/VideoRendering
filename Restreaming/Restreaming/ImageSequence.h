@@ -26,17 +26,27 @@ extern "C"{
 class ImageSequence{
     
 public:
-    ImageSequence(char const *);
+    ImageSequence(std::string filename);
     
     /**
      returns pointer to next frame in sequence.
      */
     ImageFrame * getFrame(float contentVideoTimeBase ,float ptsFactor, int contentVideoPts);
     
+    int getZIndex(){
+        return zIndex;
+    }
+    
+    void setZIndex(int num){
+        zIndex = num;
+    }
+    
     int getVideoHeight();
     int getVideoWidth();
     
     float getOffetTime();
+    
+    void cleanup();
 private:
     //the decoded frame number, ie if currently the instance is holding decoded data for frame number 3
     //then this variable will be 3. starting from 1.
@@ -65,14 +75,29 @@ private:
     
     int height,width;
     
-    const char *baseFileName;
+    std::string baseFileName;
     ImageFrame *currFrame = NULL;
+    
+    //will be used again and again for various png files
     AVFormatContext *ifmt_ctx = NULL;
     
-    void cleanup();
+    
     
     int openFile(const char * fileName);
     
+    
+    /**
+     *  calculates the next animation frame which needs to be displayed on content video at any time
+        
+     *
+     *  @param contentVideoTimeBase timebase used in content video
+     *  @param ptsFactor            ptsFactor =  1 /(frameRate * timebase) ;
+     
+     *  @param contentVideoPts       pts of current frame in content video
+     *
+     *  @return returns the frame num which should be rendered from this animation
+      -1 if the the startTime for the current animation has not passed yet.
+     */
     int calculateNextFrameNumber(float contentVideoTimeBase , float ptsFactor,int contentVideoPts);
     
     void closeFile();

@@ -14,20 +14,26 @@ ImageFrame::ImageFrame(){
     this->skipFrame = false;
     this->top = 0;
     this->left = 0;
-    this->bottom = 0;
-    this->right = 0;
+   
     this->frameFileName = "";
     this->decodedFrame = NULL;
 }
 
+
 int ImageFrame::getHeight(){
-    return this->bottom - this->top;
-    //return this->bottom - this->top + 1;
+    return height;
 }
 
 int ImageFrame::getWidth() {
-    return this->right - this->left;
-    //return this->right - this->left + 1;
+    return width;
+}
+
+void ImageFrame::setHeight(int h){
+    this->height = h;
+}
+
+void ImageFrame::setWidth(int w){
+    this->width = w;
 }
 
 bool ImageFrame::hasDecodedFrame(){

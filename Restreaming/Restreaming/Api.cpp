@@ -12,13 +12,15 @@ using namespace web::http::experimental::listener;
 #include <string>
 #include <thread>
 #include <boost/any.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
 
 #include "ImageSequence.h"
 #include "OverlayAnimation.h"
 
 extern "C"{
 #include <libavformat/avformat.h>
-
+    
 }
 
 using namespace std;
@@ -29,35 +31,48 @@ using namespace std;
 map<utility::string_t, utility::string_t> dictionary;
 
 class Task{
-    private:
-    
-    string videoPath,animationPath,outputFilePath;
+private:
+    vector<string> animationPathList;
+    string videoPath,outputFilePath;
     int fps , maxFrames,reportingEnabled,uniqueId;
+    int numAnimations;
     
     
     public :
-    Task(string _videoPath,string _outputFilePath, string _animationPath , int _fps, int _maxFrames,int _reportingEnabled,int _uniqueId){
+    Task(string _videoPath,string _outputFilePath, vector<string> _animationPathList ,
+          int _fps, int _maxFrames,int _reportingEnabled,int _uniqueId){
         cout << "Starting a task";
-        fps = _fps;
-        videoPath = _videoPath;
-        animationPath = _animationPath;
-        maxFrames = _maxFrames;
-        outputFilePath = _outputFilePath;
-        reportingEnabled = _reportingEnabled;
-        uniqueId = _uniqueId;
+        fps               = _fps;
+        videoPath         = _videoPath;
+        animationPathList = _animationPathList;
+        numAnimations     = (int)animationPathList.size();
+        maxFrames         = _maxFrames;
+        outputFilePath    = _outputFilePath;
+        reportingEnabled  = _reportingEnabled;
+        uniqueId          = _uniqueId;
     }
     
     void operator()() const
     {
         try{
-        
-        ImageSequence *imageSequence  = new ImageSequence(animationPath.c_str()); //12,653
-        
-        VideoFileInstance *contentVideo = new VideoFileInstance(1,imageSequence,
-                                                                videoPath.c_str(),
-                                                                outputFilePath.c_str(),
-                                                                reportingEnabled);
-           int ret = contentVideo->openInputAndOutputFiles();
+            
+            ImageSequence * imageSequenceList[numAnimations];
+            int i = 0;
+            for (i=0;i<animationPathList.size();i++){
+                string animationPath = animationPathList[i];
+                boost::trim_left(animationPath);
+                boost::trim_right(animationPath);
+                ImageSequence *imageSequence  = new ImageSequence(animationPath.c_str());
+                imageSequenceList[i] = imageSequence;
+            }
+            
+            
+           
+            VideoFileInstance *contentVideo = new VideoFileInstance(1,imageSequenceList,numAnimations,
+                                                                    videoPath.c_str(),
+                                                                    outputFilePath.c_str(),
+                                                                    reportingEnabled);
+            int ret = contentVideo->openInputAndOutputFiles();
             
             if(ret < 0){
                 av_log(NULL,AV_LOG_ERROR ,"Error occured while openong input or output files");
@@ -70,10 +85,10 @@ class Task{
             if(ret < 0){
                 av_log(NULL,AV_LOG_ERROR ,"Error occured while overlaying");
             }
-        
+            
             contentVideo->cleanup();
         }catch(exception const & e){
-           wcout << e.what() << endl;
+            wcout << e.what() << endl;
         }
     }
 };
@@ -82,10 +97,10 @@ class Task{
 void handle_get(http_request request)
 {
     TRACE(L"\nhandle GET\n");
-//    Task task;
-//    std::thread thread(task);
-//    thread.detach();
-     string s = request.to_string();
+    //    Task task;
+    //    std::thread thread(task);
+    //    thread.detach();
+    string s = request.to_string();
     TRACE(s.c_str());
     request.reply(status_codes::OK, "Hello WOrld");
 }
@@ -115,11 +130,11 @@ void handle_post(http_request request)
                 //cout << str << v <<"\n";
             }
             
-
+            
         }catch (exception const & e){
             wcout << e.what() << endl;
         }
-
+        
     }).wait();
     
     string videoPath,animationPath,outputFilePath;
@@ -176,13 +191,17 @@ void handle_post(http_request request)
         reportingEnabled = 1;
     }
     
-    Task task(videoPath,outputFilePath,animationPath,fps,max_frames,reportingEnabled,uniqueId);
+    
+    std::vector<string> animationList;
+    split(animationList,animationPath,boost::is_any_of(","),boost::token_compress_on);
+    
+    Task task(videoPath,outputFilePath,animationList,fps,max_frames,reportingEnabled,uniqueId);
     std::thread thread(task);
     thread.detach();
-
+    
     
     //cout << request.to_string();
-
+    
     request.reply(status_codes::OK, "Job Started");
 }
 
@@ -191,14 +210,14 @@ int main()
     
     av_register_all();
     
-//    avfilter_register_all();
+    //    avfilter_register_all();
     //utility::string_t s(L"http://0.0.0.0:8000/render");
     http_listener listener("http://0.0.0.0:8000/render");
     
     listener.support(methods::GET, handle_get);
-   listener.support(methods::POST, handle_post);
-//    listener.support(methods::PUT, handle_put);
-//    listener.support(methods::DEL, handle_del);
+    listener.support(methods::POST, handle_post);
+    //    listener.support(methods::PUT, handle_put);
+    //    listener.support(methods::DEL, handle_del);
     
     try
     {

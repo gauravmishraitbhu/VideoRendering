@@ -23,6 +23,12 @@ extern "C"{
 
 
 class ImageFrame {
+private:
+    
+    //dimention of the image
+    //image files will always have integer height and width
+    int height = 0;
+    int width = 0;
     
 public:
     int frameIndex        = 0;
@@ -30,9 +36,7 @@ public:
     std::string frameFileName;
     int left              = 0;
     int top               = 0;
-    int right             = 0;
-    int bottom            = 0;
-
+    
     AVFrame *decodedFrame = NULL;
     
     ImageFrame();
@@ -51,6 +55,9 @@ public:
      *  @return height of current frame
      */
     int getHeight();
+    
+    void setWidth(int w);
+    void setHeight(int h);
     
     void freeDecodedFrame();
     
