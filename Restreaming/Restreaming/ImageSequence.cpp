@@ -59,7 +59,7 @@ void ImageSequence::readJson(const JsonValue& json)
             this->maxNumofFrames = v.as_integer();
         }else if(key == "startTime"){
             this->offsetTime = v.as_double();
-        }else if(key == "z-index"){
+        }else if(key == "zIndex"){
             this->zIndex = v.as_integer();
         }else if(key == "frames"){
             json::array frames = v.as_array();
