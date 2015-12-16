@@ -95,6 +95,7 @@ private:
     int VIDEO_STREAM_INDEX = 0;
     int VIDEO_TYPE_CONTENT = 1 , VIDEO_TYPE_ANIMATION = 2;
     int videoType; //1 = content video 2 = animation video
+    int lastReportedPercent = 0;
     
     AVFormatContext *ifmt_ctx = NULL;
     OutputStream out_stream;

@@ -39,6 +39,7 @@ extern "C"{
 #include <boost/any.hpp>
 #include "ImageSequence.h"
 #include "ImageFrame.h"
+#include "GlobalData.h"
 
 #include <cpprest/http_client.h>
 #include <cpprest/json.h>
@@ -221,7 +222,7 @@ int VideoFileInstance::processVideoPacket(AVPacket *packet , int *frameEncodedCo
     
     AVFrame *contentVideoFrame, *contentVideoRGB , *contentVideoFinalYUV;
     AVFrame *animationVideoFrame , *animationVideoRGB;
-    int lastReportedPercent = 0,percentGaps;
+    int percentGaps;
     AVPacket encodedPacket;
     
     int ret            = 0;
@@ -241,13 +242,7 @@ int VideoFileInstance::processVideoPacket(AVPacket *packet , int *frameEncodedCo
     double ptsFactorFloat =  1 /(frameRate * timebase) ;
     double ptsFactor = round(ptsFactorFloat);
     
-    if(videoDuration < 10){
-        percentGaps = 50;
-    }else if(videoDuration >=10 && videoDuration < 30){
-        percentGaps = 25;
-    }else{
-        percentGaps = 10;
-    }
+    percentGaps = 10;
     
     
     ret = avcodec_decode_video2(in_stream->codec,
@@ -397,7 +392,7 @@ int VideoFileInstance::startOverlaying(){
         ret = av_read_frame(ifmt_ctx, &packet);
         
         if(ret < 0) {
-            reportStatus(100);
+
             av_log( NULL , AV_LOG_ERROR , "error reading frame or end of file");
             break;
         }
@@ -468,7 +463,7 @@ int VideoFileInstance::startOverlaying(){
         }while(encode_success);
     }
    
-    
+    reportStatus(100);
     ret = av_write_trailer(out_stream.format_ctx);
     if(ret < 0){
         av_log(NULL,AV_LOG_ERROR , "Error writing  a trailer to container...");
@@ -813,16 +808,11 @@ int VideoFileInstance::openInputAndOutputFiles(){
 
 void VideoFileInstance::reportStatus(int percent) {
     
-    if(reportStatusEnabled){
-        
-        string s = "reporting status for video id" + std::to_string( uniqueId ) + "percent == " + std::to_string(percent);
-        
-        cout << s;
-        av_log(NULL, AV_LOG_DEBUG,s.c_str());
-        ReportStatusTask task(uniqueId,percent);
-        std::thread thread(task);
-        thread.detach();
-    }
+    //string s = "reporting status for video id" + std::to_string( uniqueId ) + "percent == " + std::to_string(percent);
+//    cout<<s<<"\n";
+    //av_log(NULL, AV_LOG_DEBUG,s.c_str());
+    
+    GlobalData::jobStatusMap[uniqueId] = percent;
 }
 
 //int main(){

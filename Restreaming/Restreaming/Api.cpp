@@ -17,6 +17,7 @@ using namespace web::http::experimental::listener;
 
 #include "ImageSequence.h"
 #include "OverlayAnimation.h"
+#include "GlobalData.h"
 
 extern "C"{
 #include <libavformat/avformat.h>
@@ -34,19 +35,18 @@ class Task{
 private:
     vector<string> animationPathList;
     string videoPath,outputFilePath;
-    int fps , maxFrames,reportingEnabled,uniqueId;
+    int reportingEnabled,uniqueId;
     int numAnimations;
     
     
     public :
-    Task(string _videoPath,string _outputFilePath, vector<string> _animationPathList ,
-          int _fps, int _maxFrames,int _reportingEnabled,int _uniqueId){
+    Task(string _videoPath,string _outputFilePath, vector<string> _animationPathList,int _reportingEnabled,int _uniqueId){
         cout << "Starting a task";
-        fps               = _fps;
+        
         videoPath         = _videoPath;
         animationPathList = _animationPathList;
         numAnimations     = (int)animationPathList.size();
-        maxFrames         = _maxFrames;
+
         outputFilePath    = _outputFilePath;
         reportingEnabled  = _reportingEnabled;
         uniqueId          = _uniqueId;
@@ -97,12 +97,40 @@ private:
 void handle_get(http_request request)
 {
     TRACE(L"\nhandle GET\n");
-    //    Task task;
-    //    std::thread thread(task);
-    //    thread.detach();
+    
     string s = request.to_string();
-    TRACE(s.c_str());
-    request.reply(status_codes::OK, "Hello WOrld");
+    cout << request.relative_uri().to_string();
+    
+    if(boost::starts_with(request.relative_uri().to_string() , "/status")){
+        auto http_get_vars = uri::split_query(request.request_uri().query());
+        
+        auto foundId = http_get_vars.find("uniqueId");
+        
+        if (foundId == end(http_get_vars)) {
+            
+            request.reply(status_codes::BadRequest, "uniqueId missing");
+
+        }else{
+            auto uniqueId = foundId->second;
+            int id = atoi(uniqueId.c_str());
+            if(GlobalData::jobStatusMap.find(id) == GlobalData::jobStatusMap.end()){
+                //key not found
+                request.reply(status_codes::OK, "percent=0");
+            }else{
+                //cout << GlobalData::jobStatusMap[id];
+                request.reply(status_codes::OK, "percent="+std::to_string(GlobalData::jobStatusMap[id]));
+            }
+            
+            
+        }
+
+    }else{
+        //TRACE(s.c_str());
+        request.reply(status_codes::OK, "Hello WOrld");
+    }
+    
+    
+    
 }
 
 
@@ -163,12 +191,7 @@ void handle_post(http_request request)
     }
     
     
-    if(postParams.find("fps") != postParams.end()){
-        val = boost::any_cast<json::value> (postParams["fps"]);
-        fps = std::stoi (val.as_string());
-    }else{
-        fps = 12;
-    }
+   
     
     if(postParams.find("uniqueId") != postParams.end()){
         val = boost::any_cast<json::value> (postParams["uniqueId"]);
@@ -177,12 +200,6 @@ void handle_post(http_request request)
         uniqueId = 15;
     }
     
-    if(postParams.find("maxFrames") != postParams.end()){
-        val = boost::any_cast<json::value> (postParams["maxFrames"]);
-        max_frames = std::stoi(val.as_string());
-    }else{
-        max_frames = 653;
-    }
     
     if(postParams.find("reportingEnabled") != postParams.end()){
         val = boost::any_cast<json::value> (postParams["reportingEnabled"]);
@@ -195,7 +212,7 @@ void handle_post(http_request request)
     std::vector<string> animationList;
     split(animationList,animationPath,boost::is_any_of(","),boost::token_compress_on);
     
-    Task task(videoPath,outputFilePath,animationList,fps,max_frames,reportingEnabled,uniqueId);
+    Task task(videoPath,outputFilePath,animationList,reportingEnabled,uniqueId);
     std::thread thread(task);
     thread.detach();
     
