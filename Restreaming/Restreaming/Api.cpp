@@ -164,62 +164,66 @@ void handle_post(http_request request)
         }
         
     }).wait();
-    
-    string videoPath,animationPath,outputFilePath;
-    int fps,max_frames,reportingEnabled,uniqueId;
-    
-    json::value val;
-    if(postParams.find("videoPath") != postParams.end()){
-        val = boost::any_cast<json::value> (postParams["videoPath"]);
-        videoPath = val.as_string();
-    }else{
-        videoPath = "/Users/apple/temp/Before_Vorator.mp4";
+    try{
+        
+        string videoPath,animationPath,outputFilePath;
+        int fps,max_frames,reportingEnabled,uniqueId;
+        
+        json::value val;
+        if(postParams.find("videoPath") != postParams.end()){
+            val = boost::any_cast<json::value> (postParams["videoPath"]);
+            videoPath = val.as_string();
+        }else{
+            videoPath = "/Users/apple/temp/Before_Vorator.mp4";
+        }
+        
+        if(postParams.find("animationPath") != postParams.end()){
+            val = boost::any_cast<json::value> (postParams["animationPath"]);
+            animationPath = val.as_string();
+        }else{
+            animationPath = "/Users/apple/phantomjs/examples/frames/";
+        }
+        
+        if(postParams.find("outputFilePath") != postParams.end()){
+            val = boost::any_cast<json::value> (postParams["outputFilePath"]);
+            outputFilePath = val.as_string();
+        }else{
+            outputFilePath = "/Users/apple/temp/sample_output.mp4";
+        }
+        
+        
+        
+        
+        if(postParams.find("uniqueId") != postParams.end()){
+            val = boost::any_cast<json::value> (postParams["uniqueId"]);
+            uniqueId = std::stoi (val.as_string());
+        }else{
+            uniqueId = 15;
+        }
+        
+        
+        if(postParams.find("reportingEnabled") != postParams.end()){
+            val = boost::any_cast<json::value> (postParams["reportingEnabled"]);
+            reportingEnabled = std::stoi(val.as_string());
+        }else{
+            reportingEnabled = 1;
+        }
+        
+        
+        std::vector<string> animationList;
+        split(animationList,animationPath,boost::is_any_of(","),boost::token_compress_on);
+        
+        Task task(videoPath,outputFilePath,animationList,reportingEnabled,uniqueId);
+        std::thread thread(task);
+        thread.detach();
+        
+        
+        //cout << request.to_string();
+        
+        request.reply(status_codes::OK, "Job Started");
+    }catch(exception const &e1){
+        request.reply(status_codes::BadRequest, "bad request"+std::string( e1.what()));
     }
-    
-    if(postParams.find("animationPath") != postParams.end()){
-        val = boost::any_cast<json::value> (postParams["animationPath"]);
-        animationPath = val.as_string();
-    }else{
-        animationPath = "/Users/apple/phantomjs/examples/frames/";
-    }
-    
-    if(postParams.find("outputFilePath") != postParams.end()){
-        val = boost::any_cast<json::value> (postParams["outputFilePath"]);
-        outputFilePath = val.as_string();
-    }else{
-        outputFilePath = "/Users/apple/temp/sample_output.mp4";
-    }
-    
-    
-   
-    
-    if(postParams.find("uniqueId") != postParams.end()){
-        val = boost::any_cast<json::value> (postParams["uniqueId"]);
-        uniqueId = std::stoi (val.as_string());
-    }else{
-        uniqueId = 15;
-    }
-    
-    
-    if(postParams.find("reportingEnabled") != postParams.end()){
-        val = boost::any_cast<json::value> (postParams["reportingEnabled"]);
-        reportingEnabled = std::stoi(val.as_string());
-    }else{
-        reportingEnabled = 1;
-    }
-    
-    
-    std::vector<string> animationList;
-    split(animationList,animationPath,boost::is_any_of(","),boost::token_compress_on);
-    
-    Task task(videoPath,outputFilePath,animationList,reportingEnabled,uniqueId);
-    std::thread thread(task);
-    thread.detach();
-    
-    
-    //cout << request.to_string();
-    
-    request.reply(status_codes::OK, "Job Started");
 }
 
 int main()
