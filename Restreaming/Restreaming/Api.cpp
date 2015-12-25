@@ -7,6 +7,7 @@ using namespace web::http;
 using namespace web::http::experimental::listener;
 
 #include <iostream>
+#include <sstream>
 #include <map>
 #include <set>
 #include <string>
@@ -34,13 +35,13 @@ map<utility::string_t, utility::string_t> dictionary;
 class Task{
 private:
     vector<string> animationPathList;
-    string videoPath,outputFilePath;
-    int reportingEnabled,uniqueId;
+    string videoPath,outputFilePath,uniqueId;
+    int reportingEnabled;
     int numAnimations;
     
     
     public :
-    Task(string _videoPath,string _outputFilePath, vector<string> _animationPathList,int _reportingEnabled,int _uniqueId){
+    Task(string _videoPath,string _outputFilePath, vector<string> _animationPathList,int _reportingEnabled,string _uniqueId){
         cout << "Starting a task";
         
         videoPath         = _videoPath;
@@ -112,7 +113,7 @@ void handle_get(http_request request)
 
         }else{
             auto uniqueId = foundId->second;
-            int id = atoi(uniqueId.c_str());
+            string id = uniqueId.c_str();
             if(GlobalData::jobStatusMap.find(id) == GlobalData::jobStatusMap.end()){
                 //key not found
                 request.reply(status_codes::OK, "percent=0");
@@ -167,8 +168,8 @@ void handle_post(http_request request)
     try{
         
         string videoPath,animationPath,outputFilePath;
-        int fps,max_frames,reportingEnabled,uniqueId;
-        
+        int fps,max_frames,reportingEnabled;
+        std::string uniqueId;
         json::value val;
         if(postParams.find("videoPath") != postParams.end()){
             val = boost::any_cast<json::value> (postParams["videoPath"]);
@@ -196,7 +197,7 @@ void handle_post(http_request request)
         
         if(postParams.find("uniqueId") != postParams.end()){
             val = boost::any_cast<json::value> (postParams["uniqueId"]);
-            uniqueId = std::stoi (val.as_string());
+            uniqueId = val.as_string();
         }else{
             uniqueId = 15;
         }

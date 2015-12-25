@@ -72,11 +72,11 @@ public:
         return ifmt_ctx->streams[VIDEO_STREAM_INDEX]->codec->width;
     }
     
-    void setUniqueId(int _id){
+    void setUniqueId(std::string _id){
         this->uniqueId = _id;
     }
     
-    int getUniqueId(){
+    std::string getUniqueId(){
         return uniqueId;
     }
     
@@ -90,7 +90,7 @@ private:
     const char *fileName , *outputFilePath;
     //unique id of the ffmpeg job. external apis will use this id
     //to monitor status of job.
-    int uniqueId = 1;
+    std::string uniqueId = "1";
     int reportStatusEnabled;
     int VIDEO_STREAM_INDEX = 0;
     int VIDEO_TYPE_CONTENT = 1 , VIDEO_TYPE_ANIMATION = 2;

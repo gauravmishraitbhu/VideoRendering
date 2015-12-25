@@ -13,7 +13,7 @@
 #include <map>
 
 namespace GlobalData {
-    extern std::map<int,int> jobStatusMap;
+    extern std::map<std::string,int> jobStatusMap;
 }
 
 

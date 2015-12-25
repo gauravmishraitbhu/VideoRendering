@@ -7,8 +7,11 @@
 //
 
 #include "GlobalData.h"
+#include <string>
+#include <sstream>
+#include <iostream>
 
 
 namespace GlobalData {
-    std::map<int,int> jobStatusMap ;
+    std::map<std::string,int> jobStatusMap ;
 }
