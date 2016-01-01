@@ -125,6 +125,27 @@ void handle_get(http_request request)
             
         }
 
+    }else if(boost::starts_with(request.relative_uri().to_string() , "/begin")){
+        auto http_get_vars = uri::split_query(request.request_uri().query());
+        string videoPath,animationPath,outputFilePath,uniqueId;
+        
+        videoPath = http_get_vars.find("videoPath")->second.c_str();
+        animationPath = http_get_vars.find("animationPath")->second.c_str();
+        outputFilePath = http_get_vars.find("outputFilePath")->second.c_str();
+        uniqueId = http_get_vars.find("uniqueId")->second.c_str();
+        
+        if(uniqueId.empty() || videoPath.empty()|| animationPath.empty() || outputFilePath.empty() ){
+            request.reply(status_codes::BadRequest, "videoPath , animationPath , outputFilePath , uniqueId expected in query param");
+        }else{
+            std::vector<string> animationList;
+            split(animationList,animationPath,boost::is_any_of(","),boost::token_compress_on);
+            
+            Task task(videoPath,outputFilePath,animationList,1,uniqueId);
+            std::thread thread(task);
+            thread.detach();
+            request.reply(status_codes::OK, "Job Statrted");
+        }
+        
     }else{
         //TRACE(s.c_str());
         request.reply(status_codes::OK, "Hello WOrld");
@@ -141,30 +162,45 @@ void handle_post(http_request request)
 {
     TRACE("\nhandle POST\n");
     
-    std::map<string,boost::any> postParams ;
-    request.extract_json().then([&postParams ](pplx::task<json::value> task){
-        
-        try{
-            json::value val = task.get();
-            cout <<val;
+    std::map<utility::string_t,boost::any> postParams ;
+    
+    request.extract_string().then([&postParams](pplx::task<string> task){
+        string value = task.get();
+        json::value val = json::value::parse(value);
+        for(auto iter  = val.as_object().cbegin() ; iter != val.as_object().cend() ; ++iter){
+            const std::string &str = iter->first;
+            const json::value &v = iter->second;
             
-            cout << val.is_string();
+            postParams[str] = v;
             
-            for(auto iter  = val.as_object().cbegin() ; iter != val.as_object().cend() ; ++iter){
-                const std::string &str = iter->first;
-                const json::value &v = iter->second;
-                
-                postParams[str] = v;
-                
-                //cout << str << v <<"\n";
-            }
-            
-            
-        }catch (exception const & e){
-            wcout << e.what() << endl;
+            //cout << str << v <<"\n";
         }
-        
+        TRACE(value.c_str());
     }).wait();
+    
+//    request.extract_json().then([&postParams ](pplx::task<json::value> task){
+//        
+//        try{
+//            json::value val = task.get();
+//            cout <<val;
+//            
+//            cout << val.is_string();
+//            
+//            for(auto iter  = val.as_object().cbegin() ; iter != val.as_object().cend() ; ++iter){
+//                const std::string &str = iter->first;
+//                const json::value &v = iter->second;
+//                
+//                postParams[str] = v;
+//                
+//                //cout << str << v <<"\n";
+//            }
+//            
+//            
+//        }catch (exception const & e){
+//            wcout << e.what() << endl;
+//        }
+//        
+//    }).wait();
     try{
         
         string videoPath,animationPath,outputFilePath;
