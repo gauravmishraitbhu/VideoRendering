@@ -82,10 +82,15 @@ void ImageSequence::readJson(const JsonValue& json)
 
 
 void ImageSequence::parseMetaFile(const char *metaFileName){
+    wcout<<"going to parse file--"<<metaFileName;
     std::ifstream jsonFile(metaFileName);
+    std::string content;
+    content.assign( (std::istreambuf_iterator<char>(jsonFile) ),
+                   (std::istreambuf_iterator<char>()    ) );
     std::ostringstream tmp;
     json::value jsonVal;
-    jsonVal = jsonVal.parse(jsonFile);
+    wcout<<"content of json file"<<content.c_str()<<"\n";
+    jsonVal = web::json::value::parse(content);
     readJson(jsonVal);
 }
 

@@ -184,6 +184,7 @@ int VideoFileInstance::processAudioPacket(AVPacket *packet , AVStream *in_stream
 int VideoFileInstance::encodeWriteFrame(AVFrame *frame ,AVPacket *encodedPacket ,int *encode_success){
     int ret;
     
+    encodedPacket->data = NULL;
     ret = avcodec_encode_video2(this->out_stream.format_ctx->streams[0]->codec,
                                 encodedPacket,
                                 frame,
@@ -751,7 +752,7 @@ int VideoFileInstance::convertToYuvFrame (AVFrame **rgbFrame , AVFrame ** yuvFra
 int VideoFileInstance::openFile() {
     int ret;
     if ((ret = avformat_open_input(&ifmt_ctx, fileName, NULL, NULL)) < 0) {
-        av_log(NULL, AV_LOG_ERROR, "Cannot open input file\n");
+        av_log(NULL, AV_LOG_ERROR, "Cannot open input file---%s\n",fileName);
         return ret;
     }
     
