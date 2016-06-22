@@ -30,17 +30,43 @@ private:
     int height = 0;
     int width = 0;
     
-public:
-    int frameIndex        = 0;
-    bool skipFrame        = false;
-    std::string frameFileName;
     int left              = 0;
     int top               = 0;
+    int frameIndex = 0;
+    
+public:
+
+    
+    
     
     AVFrame *decodedFrame = NULL;
     
+    
     ImageFrame();
     
+    void setLeft(int _left){
+        left = _left;
+    }
+    
+    int getLeft(){
+        return left;
+    }
+    
+    void setTop(int _top){
+        top = _top;
+    }
+    
+    int getTop(){
+        return top;
+    }
+    
+    int getFrameIndex(){
+        return frameIndex;
+    }
+    
+    void setFrameIndex(int index){
+        frameIndex = index;
+    }
     
     /**
      *

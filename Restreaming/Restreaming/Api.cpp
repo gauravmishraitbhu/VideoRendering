@@ -1,10 +1,4 @@
-#include <cpprest/http_listener.h>
-#include <cpprest/json.h>
-#pragma comment(lib, "cpprest110_1_1")
 
-using namespace web;
-using namespace web::http;
-using namespace web::http::experimental::listener;
 
 #include <iostream>
 #include <sstream>
@@ -12,17 +6,15 @@ using namespace web::http::experimental::listener;
 #include <set>
 #include <string>
 #include <thread>
-#include <boost/any.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/classification.hpp>
-
 #include "ImageSequence.h"
 #include "OverlayAnimation.h"
-#include "GlobalData.h"
+#include "Utils.h"
 
 extern "C"{
 #include <libavformat/avformat.h>
-    
+
+#include <jni.h>
+#include "com_typito_exporter_RenderJobThread.h"
 }
 
 using namespace std;
@@ -30,266 +22,164 @@ using namespace std;
 #define TRACE(msg)            wcout << msg
 #define TRACE_ACTION(a, k, v) wcout << a << L" (" << k << L", " << v << L")\n"
 
-map<utility::string_t, utility::string_t> dictionary;
-
-class Task{
-private:
-    vector<string> animationPathList;
-    string videoPath,outputFilePath,uniqueId;
-    int reportingEnabled;
-    int numAnimations;
-    
-    
-    public :
-    Task(string _videoPath,string _outputFilePath, vector<string> _animationPathList,int _reportingEnabled,string _uniqueId){
-        cout << "Starting a task";
-        
-        videoPath         = _videoPath;
-        animationPathList = _animationPathList;
-        numAnimations     = (int)animationPathList.size();
-
-        outputFilePath    = _outputFilePath;
-        reportingEnabled  = _reportingEnabled;
-        uniqueId          = _uniqueId;
-    }
-    
-    void operator()() const
-    {
-        try{
-            
-            ImageSequence * imageSequenceList[numAnimations];
-            int i = 0;
-            for (i=0;i<animationPathList.size();i++){
-                string animationPath = animationPathList[i];
-                boost::trim_left(animationPath);
-                boost::trim_right(animationPath);
-                ImageSequence *imageSequence  = new ImageSequence(animationPath.c_str());
-                imageSequenceList[i] = imageSequence;
-            }
-            
-            
-           
-            VideoFileInstance *contentVideo = new VideoFileInstance(1,imageSequenceList,numAnimations,
-                                                                    videoPath.c_str(),
-                                                                    outputFilePath.c_str(),
-                                                                    reportingEnabled);
-            int ret = contentVideo->openInputAndOutputFiles();
-            
-            if(ret < 0){
-                av_log(NULL,AV_LOG_ERROR ,"Error occured while openong input or output files");
-                return;
-            }
-            
-            contentVideo->setUniqueId(uniqueId);
-            ret = contentVideo->startOverlaying();
-            
-            if(ret < 0){
-                av_log(NULL,AV_LOG_ERROR ,"Error occured while overlaying");
-            }
-            
-            contentVideo->cleanup();
-        }catch(exception const & e){
-            wcout << e.what() << endl;
-        }
-    }
-};
 
 
-void handle_get(http_request request)
+std::string convertToStr(JNIEnv* env, jstring s)
 {
-    TRACE(L"\nhandle GET\n");
-    
-    string s = request.to_string();
-    cout << request.relative_uri().to_string();
-    
-    if(boost::starts_with(request.relative_uri().to_string() , "/status")){
-        auto http_get_vars = uri::split_query(request.request_uri().query());
-        
-        auto foundId = http_get_vars.find("uniqueId");
-        
-        if (foundId == end(http_get_vars)) {
-            
-            request.reply(status_codes::BadRequest, "uniqueId missing");
+    if(s == NULL || env == NULL) return string("");
+    const char* str = env->GetStringUTFChars(s, 0);
+    string ret = str;
+    env->ReleaseStringUTFChars(s, str);
 
-        }else{
-            auto uniqueId = foundId->second;
-            string id = uniqueId.c_str();
-            if(GlobalData::jobStatusMap.find(id) == GlobalData::jobStatusMap.end()){
-                //key not found
-                request.reply(status_codes::OK, "percent=0");
-            }else{
-                //cout << GlobalData::jobStatusMap[id];
-                request.reply(status_codes::OK, "percent="+std::to_string(GlobalData::jobStatusMap[id]));
-            }
-            
-            
-        }
-
-    }else if(boost::starts_with(request.relative_uri().to_string() , "/begin")){
-        auto http_get_vars = uri::split_query(request.request_uri().query());
-        string videoPath,animationPath,outputFilePath,uniqueId;
-        
-        videoPath = http_get_vars.find("videoPath")->second.c_str();
-        animationPath = http_get_vars.find("animationPath")->second.c_str();
-        outputFilePath = http_get_vars.find("outputFilePath")->second.c_str();
-        uniqueId = http_get_vars.find("uniqueId")->second.c_str();
-        
-        if(uniqueId.empty() || videoPath.empty()|| animationPath.empty() || outputFilePath.empty() ){
-            request.reply(status_codes::BadRequest, "videoPath , animationPath , outputFilePath , uniqueId expected in query param");
-        }else{
-            std::vector<string> animationList;
-            split(animationList,animationPath,boost::is_any_of(","),boost::token_compress_on);
-            
-            Task task(videoPath,outputFilePath,animationList,1,uniqueId);
-            std::thread thread(task);
-            thread.detach();
-            request.reply(status_codes::OK, "Job Statrted");
-        }
-        
-    }else{
-        //TRACE(s.c_str());
-        request.reply(status_codes::OK, "Hello WOrld");
-    }
-    
-    
-    
+    return ret;
 }
 
+//
+// /**
+//  takes in java version of ImageSequence object and sets the appropriate values native copy
+//  */
+// void convertFromImageImageSequenceObject(JNIEnv * env , jobject javaImageSeqObj , ImageSequence *imageSeqNative){
+//     //fps
+//     jmethodID fpsGetter = getMethodId(env, javaImageSeqObj, "getFps","()I" );
+//     jint fps = env->CallIntMethod(javaImageSeqObj, fpsGetter);
+//     imageSeqNative->setFps((int)fps);
+//
+//     //startTime
+//     jmethodID startTimeGetter = getMethodId(env, javaImageSeqObj, "getStartTime", "()F");
+//     jfloat startTime = env->CallFloatMethod(javaImageSeqObj, startTimeGetter);
+//     imageSeqNative->setOffsetTime(startTime);
+//
+//     //zIndex
+//     jmethodID zIndexGetter = getMethodId(env, javaImageSeqObj, "getzIndex", "()I");
+//     jint zIndex = env->CallIntMethod(javaImageSeqObj, zIndexGetter);
+//     imageSeqNative->setZIndex((int)zIndex);
+//
+//     //num of frames
+//     jmethodID numFramesGetter = getMethodId(env, javaImageSeqObj, "getNumFrames", "()I");
+//     jint numFrames = env->CallIntMethod(javaImageSeqObj, numFramesGetter);
+//     imageSeqNative->setNumFrames(numFrames);
+//
+//     //seqId
+//     jmethodID idGetter = getMethodId(env, javaImageSeqObj, "getId", "()Ljava/lang/String;");
+//     jstring seqId = (jstring)env->CallObjectMethod(javaImageSeqObj, idGetter);
+//     const char* seqIdChar = env->GetStringUTFChars(seqId,NULL);
+//     string seqIdStr(seqIdChar);
+//     imageSeqNative->setSeqId(seqIdStr);
+//     env->ReleaseStringUTFChars(seqId, seqIdChar);
+//
+// }
 
 
+// JNIEXPORT jint JNICALL Java_com_typito_exporter_RenderJobThread_startJobNative
+// (JNIEnv * env, jobject obj, jstring videoPathJStr, jstring outputFilePathJStr, jstring uniqueIdJStr,jobjectArray imageSeqJObjects){
+//
+//     std::string videoPath = convertToStr(env , videoPathJStr);
+//
+//     std::string outputFilePath = convertToStr(env , outputFilePathJStr);
+//     std::string uniqueId = convertToStr(env , uniqueIdJStr);
+//
+//     int numAnimations = env->GetArrayLength(imageSeqJObjects);
+//
+//     av_log(NULL,AV_LOG_DEBUG , "starting job native");
+//
+//     try{
+//
+//         ImageSequence * imageSequenceList[numAnimations];
+//         int i = 0;
+//         for (i=0;i<numAnimations;i++){
+//             jobject javaImageSeqObj = env->GetObjectArrayElement(imageSeqJObjects, i);
+//             ImageSequence *imageSequence  = new ImageSequence(env,obj);
+//             convertFromImageImageSequenceObject(env , javaImageSeqObj , imageSequence);
+//             imageSequenceList[i] = imageSequence;
+//         }
+//
+//
+//         time_t startTime= std::time(0);
+//
+//         VideoFileInstance *contentVideo = new VideoFileInstance(1,imageSequenceList,numAnimations,
+//                                                                 videoPath.c_str(),
+//                                                                 outputFilePath.c_str(),
+//                                                                 1,env,obj);
+//         int ret = contentVideo->openInputAndOutputFiles();
+//
+//         if(ret < 0){
+//             av_log(NULL,AV_LOG_ERROR ,"Error occured while openong input or output files");
+//             return -1;
+//         }
+//
+//         contentVideo->setUniqueId(uniqueId);
+//         ret = contentVideo->startOverlaying();
+//
+//
+//         if(ret < 0){
+//
+//             av_log(NULL,AV_LOG_ERROR ,"Error occured while overlaying");
+//                         return -1;
+//         }
+//
+//         // contentVideo->cleanup();
+//     }catch(exception const & e){
+//         wcout << e.what() << endl;
+//         return -1;
+//     }
+//
+//     return 1;
+// }
 
-void handle_post(http_request request)
-{
-    TRACE("\nhandle POST\n");
-    
-    std::map<utility::string_t,boost::any> postParams ;
-    
-    request.extract_string().then([&postParams](pplx::task<string> task){
-        string value = task.get();
-        json::value val = json::value::parse(value);
-        for(auto iter  = val.as_object().cbegin() ; iter != val.as_object().cend() ; ++iter){
-            const std::string &str = iter->first;
-            const json::value &v = iter->second;
-            
-            postParams[str] = v;
-            
-            //cout << str << v <<"\n";
-        }
-        TRACE(value.c_str());
-    }).wait();
-    
-//    request.extract_json().then([&postParams ](pplx::task<json::value> task){
-//        
-//        try{
-//            json::value val = task.get();
-//            cout <<val;
-//            
-//            cout << val.is_string();
-//            
-//            for(auto iter  = val.as_object().cbegin() ; iter != val.as_object().cend() ; ++iter){
-//                const std::string &str = iter->first;
-//                const json::value &v = iter->second;
-//                
-//                postParams[str] = v;
-//                
-//                //cout << str << v <<"\n";
-//            }
-//            
-//            
-//        }catch (exception const & e){
-//            wcout << e.what() << endl;
+JNIEXPORT jstring JNICALL Java_com_typito_exporter_RenderJobThread_getJobStatusNative
+(JNIEnv *env, jobject object, jstring uniqueId){
+
+
+    return NULL;
+}
+// 
+//
+// JNIEXPORT jint JNICALL Java_com_typito_exporter_RenderJobThread_setupLibNative
+// (JNIEnv *env, jobject object){
+//     av_register_all();
+//     return 1;
+// }
+
+//int main(){
+//    JavaVM *jvm;
+//    JNIEnv *env;
+//    JavaVMInitArgs vm_args;
+//    JavaVMOption* options = new JavaVMOption[1];
+//    options[0].optionString = "-Djava.class.path=/Users/apple/Vorator/vorator_codebase/vorator/ExporterApp/target/classes";
+//
+//    vm_args.version = JNI_VERSION_1_6;             // minimum Java version
+//    vm_args.nOptions = 1;                          // number of options
+//    vm_args.options = options;
+//    vm_args.ignoreUnrecognized = false;
+//
+//    jint rc = JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);  // YES !!
+//    delete options;    // we then no longer need the initialisation options.
+//    if (rc != JNI_OK) {
+//        // TO DO: error processing...
+//        cin.get();
+//        exit(EXIT_FAILURE);
+//    }
+//    //=============== Display JVM version =======================================
+//    cout << "JVM load succeeded: Version ";
+//    jint ver = env->GetVersion();
+//    cout << ((ver>>16)&0x0f) << "."<<(ver&0x0f) << endl;
+//
+//    jclass TestClazz = env->FindClass("com/typito/exporter/Test");
+//    jobject obj;
+//    if(TestClazz != nullptr){
+//        cout <<"found the test class" << "\n";
+//        jmethodID jmethodID = env->GetStaticMethodID(TestClazz , "test" , "()Lcom/typito/exporter/RenderJobThread;");
+//
+//         obj = env->CallStaticObjectMethod(TestClazz, jmethodID);
+//        if(obj != nullptr){
+//            cout << "got java object";
 //        }
-//        
-//    }).wait();
-    try{
-        
-        string videoPath,animationPath,outputFilePath;
-        int fps,max_frames,reportingEnabled;
-        std::string uniqueId;
-        json::value val;
-        if(postParams.find("videoPath") != postParams.end()){
-            val = boost::any_cast<json::value> (postParams["videoPath"]);
-            videoPath = val.as_string();
-        }else{
-            videoPath = "/Users/apple/temp/Before_Vorator.mp4";
-        }
-        
-        if(postParams.find("animationPath") != postParams.end()){
-            val = boost::any_cast<json::value> (postParams["animationPath"]);
-            animationPath = val.as_string();
-        }else{
-            animationPath = "/Users/apple/phantomjs/examples/frames/";
-        }
-        
-        if(postParams.find("outputFilePath") != postParams.end()){
-            val = boost::any_cast<json::value> (postParams["outputFilePath"]);
-            outputFilePath = val.as_string();
-        }else{
-            outputFilePath = "/Users/apple/temp/sample_output.mp4";
-        }
-        
-        
-        
-        
-        if(postParams.find("uniqueId") != postParams.end()){
-            val = boost::any_cast<json::value> (postParams["uniqueId"]);
-            uniqueId = val.as_string();
-        }else{
-            uniqueId = 15;
-        }
-        
-        
-        if(postParams.find("reportingEnabled") != postParams.end()){
-            val = boost::any_cast<json::value> (postParams["reportingEnabled"]);
-            reportingEnabled = std::stoi(val.as_string());
-        }else{
-            reportingEnabled = 1;
-        }
-        
-        
-        std::vector<string> animationList;
-        split(animationList,animationPath,boost::is_any_of(","),boost::token_compress_on);
-        
-        Task task(videoPath,outputFilePath,animationList,reportingEnabled,uniqueId);
-        std::thread thread(task);
-        thread.detach();
-        
-        
-        //cout << request.to_string();
-        
-        request.reply(status_codes::OK, "Job Started");
-    }catch(exception const &e1){
-        request.reply(status_codes::BadRequest, "bad request"+std::string( e1.what()));
-    }
-}
-
-int main()
-{
-    
-    av_register_all();
-    
-    //    avfilter_register_all();
-    //utility::string_t s(L"http://0.0.0.0:8000/render");
-    http_listener listener("http://0.0.0.0:8000/render");
-    
-    listener.support(methods::GET, handle_get);
-    listener.support(methods::POST, handle_post);
-    //    listener.support(methods::PUT, handle_put);
-    //    listener.support(methods::DEL, handle_del);
-    
-    try
-    {
-        listener
-        .open()
-        .then([&listener](){TRACE("\nstarting to listen\n");})
-        .wait();
-        
-        while (true);
-    }
-    catch (exception const & e)
-    {
-        wcout << e.what() << endl;
-    }
-    
-    return 0;
-}
+//
+//    }
+//
+//
+//
+//    // TO DO: add the code that will use JVM <============  (see next steps)
+//    cin.get();
+//    jvm->DestroyJavaVM();
+//}

@@ -7,11 +7,11 @@
 //
 
 extern "C"{
-    
+
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
-    
-    
+#include <jni.h>
+
 #include <libavutil/opt.h>
 }
 
@@ -23,26 +23,30 @@ extern "C"{
 using namespace std;
 
 
+jmethodID getMethodId(JNIEnv * env , jobject javaObj,const char* methodName , const char * signature ){
+    jclass objClazz = env->GetObjectClass(javaObj);
+    return env->GetMethodID(objClazz, methodName, signature);
+}
 
 
 int open_input_file(const char *filename,AVFormatContext **ifmt_ctx)
 {
     int ret;
     unsigned int i;
-    
-    
+
+
     if ((ret = avformat_open_input(ifmt_ctx, filename, NULL, NULL)) < 0) {
         av_log(NULL, AV_LOG_ERROR, "Cannot open input file\n");
         return ret;
     }
-    
+
     //setting the member variable
-    
+
     if ((ret = avformat_find_stream_info(*ifmt_ctx, NULL)) < 0) {
         av_log(NULL, AV_LOG_ERROR, "Cannot find stream information\n");
         return ret;
     }
-    
+
     for (i = 0; i < (*ifmt_ctx)->nb_streams; i++) {
         AVStream *stream;
         AVCodecContext *codec_ctx;
@@ -60,22 +64,22 @@ int open_input_file(const char *filename,AVFormatContext **ifmt_ctx)
             }
         }
     }
-    
-    
+
+
     av_dump_format(*ifmt_ctx, 0, filename, 0);
     return 0;
 }
 
 int open_outputfile_copy_codecs(const char *filename, OutputStream *outputStream,AVCodecContext *inputVideoCodec , AVCodecContext *inputAudioCodecCtx,AVFormatContext *inputFormatCtx){
     int ret = 1;
-    
+
     AVFormatContext *ofmt_ctx = NULL;
     avformat_alloc_output_context2(&ofmt_ctx, NULL, NULL , filename);
-    
+
     outputStream->format_ctx = ofmt_ctx;
-    
+
     AVCodec * videoCodec = avcodec_find_encoder(inputVideoCodec->codec_id);
-    
+
     //create a video stream
     AVStream *outputVideoStream = avformat_new_stream(ofmt_ctx, videoCodec);
     if (!outputVideoStream) {
@@ -83,8 +87,8 @@ int open_outputfile_copy_codecs(const char *filename, OutputStream *outputStream
         ret = AVERROR_UNKNOWN;
         return ret;
     }
-    
-    
+
+
     //copy the settings
     //videoStream->codec = avcodec_alloc_context3(videoCodec);
     //    ret = avcodec_copy_context(outputVideoStream->codec, inputVideoCodec);
@@ -92,7 +96,7 @@ int open_outputfile_copy_codecs(const char *filename, OutputStream *outputStream
     //        fprintf(stderr, "Failed to copy context from input to output stream codec context\n");
     //        return ret;
     //    }
-    
+
     int m_fps = 25;
     AVStream *inputVideoStream = inputFormatCtx->streams[0];
     outputVideoStream->sample_aspect_ratio.den = inputVideoStream->sample_aspect_ratio.den;
@@ -109,18 +113,18 @@ int open_outputfile_copy_codecs(const char *filename, OutputStream *outputStream
     outputVideoStream->avg_frame_rate.num      = m_fps;
     //    m_out_vid_strm->duration = (m_out_end_time - m_out_start_time)*1000;
     //outputVideoStream->codec->bit_rate = 400000;
-    
-    
+
+
     /* Resolution must be a multiple of two. */
     outputVideoStream->codec->width    = inputFormatCtx->streams[0]->codec->width;
     outputVideoStream->codec->height   = inputFormatCtx->streams[0]->codec->height;
-    
+
     /* timebase: This is the fundamental unit of time (in seconds) in terms
      * of which frame timestamps are represented. For fixed-fps content,
      * timebase should be 1/framerate and timestamp increments should be
      * identical to 1. */
-    
-    
+
+
     //    if(options.find("timebase_denominator") != options.end()){
     //        int denominator = boost::any_cast<int>(options["timebase_denominator"]);
     //        int numerator = boost::any_cast<int>(options["timebase_numerator"]);
@@ -130,18 +134,18 @@ int open_outputfile_copy_codecs(const char *filename, OutputStream *outputStream
     //    }
     //
     //    c->time_base       = out_stream->time_base;
-    
+
     // c->gop_size      = 12; /* emit one intra frame every twelve frames at most */
     outputVideoStream->codec->pix_fmt       = AV_PIX_FMT_YUV420P;
-    
-    
+
+
     //    outputVideoStream->codec->codec_tag = 0;
     if (ofmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
         outputVideoStream->codec->flags |= CODEC_FLAG_GLOBAL_HEADER;
-    
+
     AVCodecContext *videoCodecCtx = outputVideoStream->codec;
-    
-    
+
+
     av_opt_set(videoCodecCtx->priv_data, "preset", "slow", 0);
     ret = avcodec_open2(videoCodecCtx,videoCodec , NULL);
     //av_dict_free(&opt);
@@ -149,10 +153,10 @@ int open_outputfile_copy_codecs(const char *filename, OutputStream *outputStream
         fprintf(stderr, "Could not open video codec:\n");
         exit(1);
     }
-    
-    
+
+
 //    add audio stream
-    
+
         AVCodec *audioCodec = avcodec_find_encoder(inputAudioCodecCtx->codec_id);
         AVStream *audioStream = avformat_new_stream(ofmt_ctx, audioCodec);
         if (!audioStream) {
@@ -160,7 +164,7 @@ int open_outputfile_copy_codecs(const char *filename, OutputStream *outputStream
             ret = AVERROR_UNKNOWN;
             return ret;
         }
-    
+
         ret = avcodec_copy_context(audioStream->codec, inputAudioCodecCtx);
         if (ret < 0) {
             fprintf(stderr, "Failed to copy context from input to output stream codec context\n");
@@ -169,10 +173,10 @@ int open_outputfile_copy_codecs(const char *filename, OutputStream *outputStream
         audioStream->codec->codec_tag = 0;
         if (ofmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
             audioStream->codec->flags |= CODEC_FLAG_GLOBAL_HEADER;
-    
-    
+
+
     av_dump_format(ofmt_ctx, 0, filename, 1);
-    
+
     /* open the output file, if needed */
     if (!(ofmt_ctx->oformat->flags & AVFMT_NOFILE)) {
         ret = avio_open(&ofmt_ctx->pb, filename, AVIO_FLAG_WRITE);
@@ -181,51 +185,55 @@ int open_outputfile_copy_codecs(const char *filename, OutputStream *outputStream
             exit(1);
         }
     }
-    
+
     /* init muxer, write output file header */
     ret = avformat_write_header(ofmt_ctx, NULL);
     if (ret < 0) {
         av_log(NULL, AV_LOG_ERROR, "Error occurred when opening output file\n");
         return ret;
     }
-    
-    
-    
+
+
+
     return ret;
 }
 
 int open_outputfile(const char *filename,OutputStream *out_stream,AVFormatContext *inputFormatCtx){
-    
-    
+
+
     AVFormatContext *ofmt_ctx = NULL;
     AVCodec *video_codec      = NULL;
     int ret                   = 0;
     AVCodec *audio_codec      = NULL;
-    
+
     avformat_alloc_output_context2(&ofmt_ctx, NULL, NULL , filename);
     out_stream->format_ctx = ofmt_ctx;
-    
+
+    //add one stream for video.
     add_stream(ofmt_ctx, &video_codec, inputFormatCtx->streams[0]);
     open_video(ofmt_ctx, video_codec, NULL);
-    
-    //add audio stream
-    if(inputFormatCtx->streams[1] != NULL) {
-        add_stream_from_codec(ofmt_ctx,&audio_codec,inputFormatCtx->streams[1]->codec);
+
+
+    //add audio streams
+    for(int i=0;i<inputFormatCtx->nb_streams;i++){
+        if(inputFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO){
+            add_stream_from_codec(ofmt_ctx,&audio_codec,inputFormatCtx->streams[i]->codec);
+        }
     }
-    
-    
+
+
     av_dump_format(ofmt_ctx, 0, filename, 1);
-    
+
     /* open the output file, if needed */
     if (!(ofmt_ctx->oformat->flags & AVFMT_NOFILE)) {
         ret = avio_open(&ofmt_ctx->pb, filename, AVIO_FLAG_WRITE);
         if (ret < 0) {
-            
+
             av_log(NULL, AV_LOG_ERROR, "Could not open '%s'\n",filename);
             return ret;
         }
     }
-    
+
     /* init muxer, write output file header */
     ret = avformat_write_header(ofmt_ctx, NULL);
     if (ret < 0) {
@@ -233,7 +241,7 @@ int open_outputfile(const char *filename,OutputStream *out_stream,AVFormatContex
         return ret;
     }
     return 0;
-    
+
 }
 
 int add_stream_from_codec(AVFormatContext *oc,
@@ -242,32 +250,32 @@ int add_stream_from_codec(AVFormatContext *oc,
 {
     int ret = 0;
     *codec = avcodec_find_encoder(inputCodec->codec_id);
-    
+
     if (!(*codec)) {
         fprintf(stderr, "Could not find encoder for '%s'\n",
                 avcodec_get_name(inputCodec->codec_id));
         return -1;
     }
-    
+
     AVStream *out_stream = avformat_new_stream(oc,*codec);
     if (!out_stream) {
         fprintf(stderr, "Failed allocating output stream\n");
         ret = AVERROR_UNKNOWN;
         return ret;
     }
-    
+    out_stream->id = oc->nb_streams-1;
     ret = avcodec_copy_context(out_stream->codec, inputCodec);
     if (ret < 0) {
         fprintf(stderr, "Failed to copy context from input to output stream codec context\n");
         return ret;
     }
-    
+
     out_stream->codec->codec_tag = 0;
-    
+
     /* Some formats want stream headers to be separate. */
     if (oc->oformat->flags & AVFMT_GLOBALHEADER)
         out_stream->codec->flags |= CODEC_FLAG_GLOBAL_HEADER;
-    
+
     return 1;
 }
 
@@ -279,7 +287,7 @@ void add_stream(AVFormatContext *oc,
 {
     AVCodecContext *c;
     int i;
-    
+
     /* find the encoder */
     *codec = avcodec_find_encoder(inputStream->codec->codec_id);
     if (!(*codec)) {
@@ -288,7 +296,7 @@ void add_stream(AVFormatContext *oc,
         exit(1);
     }
     AVStream *out_stream;
-    
+
     out_stream = avformat_new_stream(oc, *codec);
     if (!out_stream) {
         fprintf(stderr, "Could not allocate stream\n");
@@ -298,19 +306,22 @@ void add_stream(AVFormatContext *oc,
 
     c = out_stream->codec;
     //    avcodec_copy_context(c, ifmt_ctx->streams[0]->codec);
+    double fps = inputStream->avg_frame_rate.num / inputStream->avg_frame_rate.den;
+    int bitrate = int(inputStream->codec->width * inputStream->codec->height * 0.05 * fps);
+
     switch ((*codec)->type) {
-            
-            
+
+
         case AVMEDIA_TYPE_VIDEO:
-            
+
 
             c->codec_id                = inputStream->codec->codec_id;
             c->bit_rate                = inputStream->codec->bit_rate;
-
             /* Resolution must be a multiple of two. */
             c->width                   = inputStream->codec->width;
             c->height                  = inputStream->codec->height;
-            c->gop_size                = inputStream->codec->gop_size;
+            c->gop_size                = 24;//inputStream->codec->gop_size;
+            c->qmax                    = inputStream->codec->qmax;
 
             c->time_base               = inputStream->codec->time_base;
             out_stream->time_base      = inputStream->time_base;
@@ -321,16 +332,16 @@ void add_stream(AVFormatContext *oc,
             c->pix_fmt                 = AV_PIX_FMT_YUV420P;
             c->sample_aspect_ratio.num = inputStream->codec->sample_aspect_ratio.num;
             c->sample_aspect_ratio.den = inputStream->codec->sample_aspect_ratio.den;
-            c->ticks_per_frame         = inputStream->codec->ticks_per_frame;
-            c->profile                 = inputStream->codec->profile;
-            c->level                   = inputStream->codec->level;
-            out_stream->duration       = inputStream->duration;
-            
+//            c->ticks_per_frame         = inputStream->codec->ticks_per_frame;
+//            c->profile                 = inputStream->codec->profile;
+//            c->level                   = inputStream->codec->level;
+            //out_stream->duration       = inputStream->duration;
 
-            
+
+
             //c->
-            
-            
+
+
             if (c->codec_id == AV_CODEC_ID_MPEG2VIDEO) {
                 /* just for testing, we also add B frames */
                 c->max_b_frames = 2;
@@ -342,17 +353,17 @@ void add_stream(AVFormatContext *oc,
                 c->mb_decision = 2;
             }
             break;
-            
+
         case AVMEDIA_TYPE_AUDIO:
             c->sample_fmt  = (*codec)->sample_fmts ?
             (*codec)->sample_fmts[0] : AV_SAMPLE_FMT_FLTP;
-            
-            
+
+
             c->sample_rate = inputStream->codec->sample_rate;
             c->bit_rate    = inputStream->codec->bit_rate;
-            
-            
-            
+
+
+
             if ((*codec)->supported_samplerates) {
                 c->sample_rate = (*codec)->supported_samplerates[0];
                 for (i = 0; (*codec)->supported_samplerates[i]; i++) {
@@ -360,19 +371,19 @@ void add_stream(AVFormatContext *oc,
                         c->sample_rate = 44100;
                 }
             }
-            
-            
-            
+
+
+
             c->frame_size = inputStream->codec->frame_size;
-            
-            
+
+
             // c->channels        = av_get_channel_layout_nb_channels(c->channel_layout);
-            
-            
+
+
             c->channel_layout = inputStream->codec->channel_layout;
-            
-            
-            
+
+
+
             if ((*codec)->channel_layouts) {
                 c->channel_layout = (*codec)->channel_layouts[0];
                 for (i = 0; (*codec)->channel_layouts[i]; i++) {
@@ -383,12 +394,12 @@ void add_stream(AVFormatContext *oc,
             c->channels        = av_get_channel_layout_nb_channels(c->channel_layout);
             out_stream->time_base = (AVRational){ 1, c->sample_rate };
             break;
-            
-            
+
+
         default:
             break;
     }
-    
+
     /* Some formats want stream headers to be separate. */
     if (oc->oformat->flags & AVFMT_GLOBALHEADER)
         c->flags |= CODEC_FLAG_GLOBAL_HEADER;
@@ -401,10 +412,11 @@ void open_video(AVFormatContext *oc, AVCodec *codec, AVDictionary *opt_arg)
     AVStream *stream = oc->streams[0];
     AVCodecContext *c = stream->codec;
     AVDictionary *opt = NULL;
-    
+
     av_dict_copy(&opt, opt_arg, 0);
-    av_opt_set(c->priv_data, "preset", "slow", 0);
-    
+    av_dict_set(&opt,"preset","slower",0);
+    av_opt_set(c->priv_data, "preset", "slower", 0);
+
     /* open the codec */
     ret = avcodec_open2(c, codec, &opt);
     av_dict_free(&opt);
@@ -421,9 +433,9 @@ void open_audio(AVFormatContext *oc, AVCodec *codec, AVDictionary *opt_arg)
     int nb_samples;
     int ret;
     AVDictionary *opt = NULL;
-    
-    
-    
+
+
+
     /* open it */
     av_dict_copy(&opt, opt_arg, 0);
     ret = avcodec_open2(c, codec, &opt);
@@ -432,123 +444,218 @@ void open_audio(AVFormatContext *oc, AVCodec *codec, AVDictionary *opt_arg)
         fprintf(stderr, "Could not open audio codec:\n");
         exit(1);
     }
-    
+
     if (c->codec->capabilities & CODEC_CAP_VARIABLE_FRAME_SIZE)
         nb_samples = 10000;
     else
         nb_samples = c->frame_size;
-    
+
 }
 
 int copyVideoPixelsRGBA (ImageFrame *imageFrame , AVFrame **destFrame , int dstHeight , int dstWidth){
-    
+
     return copyVideoPixelsRGBA(imageFrame->decodedFrame , destFrame , imageFrame->getHeight() , imageFrame->getWidth() ,
-                        dstHeight , dstWidth , imageFrame->top , imageFrame->left);
-    
+                        dstHeight , dstWidth , imageFrame->getTop() , imageFrame->getLeft());
+
+}
+
+void copyImageFrameToCanvasSizeFrame(ImageFrame *imageFrame, AVFrame *outFrame) {
+    // Pixel formate assumed to be RGBA. No conversion or scaling happens in this function.
+    // This just copies the pixels to the correct position w.r.t the canvas
+
+    int imgWidth = imageFrame->getWidth();
+    int imgHeight = imageFrame->getHeight();
+
+    int imgTop = imageFrame->getTop();
+    int imgLeft = imageFrame->getLeft();
+
+    AVFrame* imgFrame = imageFrame->decodedFrame;
+
+    int outWidth = outFrame->width;
+    int outHeight = outFrame->height;
+
+    int imgRow, imgCol;
+    uint8_t pixRed, pixGreen, pixBlue, pixAlpha;
+    int imgLinesize = imgFrame->linesize[0];
+    int outLinesize = outFrame->linesize[0];
+
+    bool isInImageBounds;
+
+    for (int outRow = 0; outRow < outHeight ; outRow++) {
+        for (int outCol = 0 ; outCol < outWidth ; outCol++) {
+
+            isInImageBounds = ((outRow >= imgTop)
+                && (outRow < (imgTop + imgHeight))
+                && (outCol >= imgLeft)
+                && (outCol < (imgLeft + imgWidth)));
+
+            if (isInImageBounds) {
+                imgRow = outRow - imgTop;
+                imgCol = outCol - imgLeft;
+
+                pixRed = imgFrame->data[0][imgRow*imgLinesize + 4*imgCol];
+                pixGreen = imgFrame->data[0][imgRow*imgLinesize + 4*imgCol + 1];
+                pixBlue = imgFrame->data[0][imgRow*imgLinesize + 4*imgCol + 2];
+                pixAlpha = imgFrame->data[0][imgRow*imgLinesize + 4*imgCol + 3];
+
+                outFrame->data[0][outRow*outLinesize + 4*outCol] = pixRed;
+                outFrame->data[0][outRow*outLinesize + 4*outCol + 1] = pixGreen;
+                outFrame->data[0][outRow*outLinesize + 4*outCol + 2] = pixBlue;
+                outFrame->data[0][outRow*outLinesize + 4*outCol + 3] = pixAlpha;
+            } else {
+
+                outFrame->data[0][outRow*outLinesize + 4*outCol] = 0;
+                outFrame->data[0][outRow*outLinesize + 4*outCol + 1] = 0;
+                outFrame->data[0][outRow*outLinesize + 4*outCol + 2] = 0;
+                outFrame->data[0][outRow*outLinesize + 4*outCol + 3] = 0;
+            }
+        }
+    }
+}
+
+void overlayFrameOnOutputFrame(AVFrame* overlayFrame, AVFrame* outFrame) {
+    // Overlay frame pixel format assumed to be RGBA, outFrame assumed to be RGB24.
+    // Both frames have to be of the same dimensions
+
+    int outWidth = outFrame->width;
+    int outHeight = outFrame->height;
+    int outLinesize = outFrame->linesize[0];
+    int overlayLinesize = overlayFrame->linesize[0];
+
+    uint8_t overlayRed, overlayGreen, overlayBlue, overlayAlpha;
+    uint8_t outRed, outGreen, outBlue;
+    float alphaFactor;
+
+    for (int outRow = 0; outRow < outHeight; outRow++) {
+        for (int outCol = 0; outCol < outWidth; outCol++) {
+
+            overlayRed = overlayFrame->data[0][outRow*overlayLinesize + 4*outCol];
+            overlayGreen = overlayFrame->data[0][outRow*overlayLinesize + 4*outCol + 1];
+            overlayBlue = overlayFrame->data[0][outRow*overlayLinesize + 4*outCol + 2];
+
+            overlayAlpha = overlayFrame->data[0][outRow*overlayLinesize + 4*outCol + 3];
+
+            alphaFactor = (float)overlayAlpha / (float)255;
+
+            outRed = outFrame->data[0][outRow*outLinesize + 3*outCol];
+            outGreen = outFrame->data[0][outRow*outLinesize + 3*outCol + 1];
+            outBlue = outFrame->data[0][outRow*outLinesize + 3*outCol + 2];
+
+            outRed = av_clip_uint8_c((int)(outRed * (1 - alphaFactor) + overlayRed * alphaFactor));
+            outGreen = av_clip_uint8_c((int)(outGreen * (1 - alphaFactor) + overlayGreen * alphaFactor));
+            outBlue = av_clip_uint8_c((int)(outBlue * (1 - alphaFactor) + overlayBlue * alphaFactor));
+
+            outFrame->data[0][outRow*outLinesize + 3*outCol] = outRed;
+            outFrame->data[0][outRow*outLinesize + 3*outCol + 1] = outGreen;
+            outFrame->data[0][outRow*outLinesize + 3*outCol + 2] = outBlue;
+
+        }
+    }
+
 }
 
 int copyVideoPixelsRGBA(AVFrame *fromFrame, AVFrame **destFrame, int srcHeight , int srcWidth,int dstHeight,int dstWidth,
                         int startRow , int startCol) {
     int ret=0;
-    
+
     uint8_t srcPixelRed , srcPixelGreen , srcPixelBlue;
-    
+
     float srcPixelAlpha;
-    
+
     uint8_t dstPixelRed , dstPixelGreen , dstPixelBlue;
     int srcRow=0 , srcCol=0 ;   //srcRow from 0 to height
     int dstRow = 0,dstCol = 0 ;
     //int startRow=0 , startCol = 0; //starting coordinates in content frame where
-    
+
+
     int srcLinesize=0,destLinesize=0;
     srcLinesize = (fromFrame)->linesize[0];
     destLinesize = (*destFrame)->linesize[0];
-    
-    
+    av_log(NULL, AV_LOG_DEBUG, "I am here1 srcHeight==%d srcWidth=%d dstHeight=%d dstWidth=%d startRow=%d startCol=%d",srcHeight , srcWidth , dstHeight , dstWidth , startRow , startCol);
+
     uint8_t resultRed , resultGreen , resultBlue;
-    
-    
+
+
     for (srcRow = 0 ;srcRow < srcHeight ; srcRow++){
         for (srcCol = 0 ; srcCol < srcWidth ; srcCol++){
             dstRow = srcRow + startRow;
             dstCol = srcCol + startCol;
-            
+
             if(dstRow > dstHeight || dstCol > dstWidth){
                 continue;
             }
-            
+
             srcPixelRed = (fromFrame)->data[0][srcRow * srcLinesize + 4*srcCol];
             srcPixelGreen = (fromFrame)->data[0][srcRow * srcLinesize + 4*srcCol + 1];
             srcPixelBlue = (fromFrame)->data[0][srcRow * srcLinesize + 4*srcCol + 2];
-            
-            
+
+
             //            if(srcPixelRed == 255 && srcPixelGreen == 255 && srcPixelBlue == 255){
             //                continue;
             //            }
             srcPixelAlpha = float( (fromFrame)->data[0][srcRow * srcLinesize + 4*srcCol + 3]);
             srcPixelAlpha = (float)srcPixelAlpha / (float)255;
-            
-            
+
+
             dstPixelRed = (*destFrame)->data[0][dstRow * destLinesize + 3*dstCol];
             dstPixelGreen = (*destFrame)->data[0][dstRow * destLinesize + 3*dstCol + 1];
             dstPixelBlue = (*destFrame)->data[0][dstRow * destLinesize + 3*dstCol + 2];
-            
-            
-            
+
+
+
             resultRed = (int)srcPixelRed * srcPixelAlpha + (int)dstPixelRed * (1-srcPixelAlpha);
             resultGreen = (int)srcPixelGreen * srcPixelAlpha + (int)dstPixelGreen * (1-srcPixelAlpha);
             resultBlue = (int)srcPixelBlue * srcPixelAlpha + (int)dstPixelBlue * (1-srcPixelAlpha);
-            
-            
-            
+
+
+
             (*destFrame)->data[0][dstRow * destLinesize + 3*dstCol] = (int)resultRed;
             (*destFrame)->data[0][dstRow * destLinesize + 3*dstCol + 1] = (int)resultGreen;
             (*destFrame)->data[0][dstRow * destLinesize + 3*dstCol + 2] = (int)resultBlue;
-            
+
         }
     }
-    
+
     return ret;
-    
+
 }
 
 
 int copyVideoPixels (AVFrame **fromFrame, AVFrame **destFrame, int srcHeight , int srcWidth,int dstHeight,int dstWidth){
     int ret=0;
-    
+
     uint8_t srcPixelRed , srcPixelGreen , srcPixelBlue;
     int srcRow=0 , srcCol=0 ;   //srcRow from 0 to height
     int dstRow = 0,dstCol = 0 ;
     int startRow=0 , startCol = 0; //starting coordinates in content frame where
     //animation needs to be put
-    
-    
+
+
     int srcLinesize=0,destLinesize=0;
     srcLinesize = (*fromFrame)->linesize[0];
     destLinesize = (*destFrame)->linesize[0];
     //fromFrame will be the animation frame.
-    
+
     for (srcRow = 0 ;srcRow < srcHeight ; srcRow++){
         for (srcCol = 0 ; srcCol < srcWidth ; srcCol++){
-            
+
             dstRow = srcRow + startRow;
             dstCol = srcCol + startCol;
             srcPixelRed = (*fromFrame)->data[0][srcRow * srcLinesize + 3*srcCol];
             srcPixelGreen = (*fromFrame)->data[0][srcRow * srcLinesize + 3*srcCol + 1];
             srcPixelBlue = (*fromFrame)->data[0][srcRow * srcLinesize + 3*srcCol + 2];
-            
+
             if(srcPixelRed == 255 && srcPixelGreen == 255 && srcPixelBlue == 255){
                 continue;
             }
-            
+
             (*destFrame)->data[0][dstRow * destLinesize + 3*dstCol] = srcPixelRed;
             (*destFrame)->data[0][dstRow * destLinesize + 3*dstCol + 1] = srcPixelGreen;
             (*destFrame)->data[0][dstRow * destLinesize + 3*dstCol + 2] = srcPixelBlue;
         }
     }
-    
-    
-    
+
+
+
     return ret;
 }
-

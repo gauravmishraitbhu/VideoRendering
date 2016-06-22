@@ -14,6 +14,8 @@
 
 namespace GlobalData {
     extern std::map<std::string,int> jobStatusMap;
+    extern std::map<std::string , time_t> startTimes ;
+    extern std::map<std::string , time_t> endTimes ;
 }
 
 

@@ -11,9 +11,11 @@ extern "C"{
 #include <libavformat/avformat.h>
 
 #include <libavcodec/avcodec.h>
+#include <jni.h>
 }
 
 #include "ImageSequence.h"
+#include "SaveRgbImageHelper.hpp"
 #include "Utils.h"
 #include <stdio.h>
 
@@ -36,7 +38,7 @@ public:
         @param outputFile - outputfile name
         @param reportStatusEnabled - wheather to report the status of current job to a extrnal api
      */
-    VideoFileInstance(int type,ImageSequence **imageSeq,int numImageSequence , const char *filename , const char *outputFile,int reportStatusEnabled );
+    VideoFileInstance(int type,ImageSequence **imageSeq,int numImageSequence , const char *filename , const char *outputFile,int reportStatusEnabled ,JNIEnv * env, jobject obj);
     
     /**
      opens the provided input and output files. returns 0 is both are successfull. else 
@@ -80,6 +82,7 @@ public:
         return uniqueId;
     }
     
+    
     /**
      for releasing context and closing codec etc.
      */
@@ -97,6 +100,9 @@ private:
     int videoType; //1 = content video 2 = animation video
     int lastReportedPercent = 0;
     
+    JNIEnv *env;
+    jobject parentJavaThread;
+    
     AVFormatContext *ifmt_ctx = NULL;
     OutputStream out_stream;
     struct SwsContext *imgConvertCtxYUVToRGB = NULL;
@@ -113,6 +119,7 @@ private:
     int convertToRGBFrame(AVFrame **,AVFrame **);
     int convertToYuvFrame(AVFrame ** , AVFrame **);
     
+    SaveImageHelper *saveImageHelper;
     
     /**
      *  simpley mux the audio packet from input container to output container.

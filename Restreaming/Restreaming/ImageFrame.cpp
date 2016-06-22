@@ -10,12 +10,10 @@
 
 
 ImageFrame::ImageFrame(){
-    this->frameIndex = 0;
-    this->skipFrame = false;
+    
     this->top = 0;
     this->left = 0;
    
-    this->frameFileName = "";
     this->decodedFrame = NULL;
 }
 

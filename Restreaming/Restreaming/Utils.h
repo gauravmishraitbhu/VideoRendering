@@ -15,7 +15,6 @@
 #include <stdio.h>
 #include <string>
 #include <map>
-#include <boost/any.hpp>
 
 extern "C"{
 #include <libavformat/avformat.h>
@@ -48,7 +47,7 @@ int open_outputfile(const char *filename,OutputStream *out_stream,AVFormatContex
  *
  *  @param oc          outputfile's formatCtx instance
  *  @param codec       codec instance whose value will be set by this function.
- *  @param inputStream corresponsing input stream . if you want to add a video stream to container 
+ *  @param inputStream corresponsing input stream . if you want to add a video stream to container
                         value should represent video stream of input file.
  */
 void add_stream(AVFormatContext *oc,
@@ -57,9 +56,9 @@ void add_stream(AVFormatContext *oc,
 
 
 /**
- same function as add_stream with only difference being the stream is created with exact same settings as 
+ same function as add_stream with only difference being the stream is created with exact same settings as
  the input codec.
- 
+
  */
 
 int add_stream_from_codec(AVFormatContext *oc,
@@ -91,6 +90,10 @@ void open_audio(AVFormatContext *oc, AVCodec *codec, AVDictionary *opt_arg);
  */
 int copyVideoPixels(AVFrame **srcFrame, AVFrame **destFrame , int srcHeight , int srcWidth, int dstHeight,int destWidth);
 
+void copyImageFrameToCanvasSizeFrame(ImageFrame *imageFrame, AVFrame *outFrame);
+
+void overlayFrameOnOutputFrame(AVFrame* overlayFrame, AVFrame* outFrame);
+
 /**
  here the srcFrame is RGBA
  @param srcFrame - rgba frame from which pixels need to be copy.
@@ -100,3 +103,5 @@ int copyVideoPixelsRGBA(AVFrame *srcFrame, AVFrame **destFrame , int srcHeight ,
                         int startRow , int startCol);
 
 int copyVideoPixelsRGBA (ImageFrame *imageFrame , AVFrame **destFrame , int dstHeight , int dstWidth);
+
+jmethodID getMethodId(JNIEnv * env , jobject javaObj,const char* methodName , const char * signature );

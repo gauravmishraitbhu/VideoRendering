@@ -186,11 +186,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/ImageSequence.cpp"
-            timestampString = "467836043.10229"
+            timestampString = "473576988.929487"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "111"
-            endingLineNumber = "111"
+            startingLineNumber = "114"
+            endingLineNumber = "114"
             landmarkName = "ImageSequence::openFile(const char *fileName)"
             landmarkType = "5">
          </BreakpointContent>
@@ -266,11 +266,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/ImageSequence.cpp"
-            timestampString = "467836202.93022"
+            timestampString = "473576988.929487"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "274"
-            endingLineNumber = "274"
+            startingLineNumber = "277"
+            endingLineNumber = "277"
             landmarkName = "ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,int contentVideoPts)"
             landmarkType = "5">
             <Locations>
@@ -314,11 +314,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/ImageSequence.cpp"
-            timestampString = "467836043.10229"
+            timestampString = "473576988.929487"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "169"
-            endingLineNumber = "169"
+            startingLineNumber = "172"
+            endingLineNumber = "172"
             landmarkName = "ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,int contentVideoPts)"
             landmarkType = "5">
          </BreakpointContent>
@@ -330,11 +330,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/ImageSequence.cpp"
-            timestampString = "467836202.93022"
+            timestampString = "473576988.929487"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "298"
-            endingLineNumber = "298"
+            startingLineNumber = "301"
+            endingLineNumber = "301"
             landmarkName = "ImageSequence::calculateNextFrameNumber(float contentVideoTimeBase ,float ptsFactor ,int contentVideoPts)"
             landmarkType = "5">
          </BreakpointContent>
@@ -346,11 +346,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/ImageSequence.cpp"
-            timestampString = "467836202.93022"
+            timestampString = "473576988.929487"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "299"
-            endingLineNumber = "299"
+            startingLineNumber = "302"
+            endingLineNumber = "302"
             landmarkName = "ImageSequence::calculateNextFrameNumber(float contentVideoTimeBase ,float ptsFactor ,int contentVideoPts)"
             landmarkType = "5">
          </BreakpointContent>
@@ -362,11 +362,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/ImageSequence.cpp"
-            timestampString = "467836043.10229"
+            timestampString = "473576988.929487"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "167"
-            endingLineNumber = "167"
+            startingLineNumber = "170"
+            endingLineNumber = "170"
             landmarkName = "ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,int contentVideoPts)"
             landmarkType = "5">
          </BreakpointContent>
@@ -394,11 +394,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/OverlayAnimation.cpp"
-            timestampString = "471889135.018315"
+            timestampString = "474458698.078287"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "518"
-            endingLineNumber = "518"
+            startingLineNumber = "519"
+            endingLineNumber = "519"
             landmarkName = "VideoFileInstance::startDecoding()"
             landmarkType = "5">
          </BreakpointContent>
@@ -410,11 +410,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/OverlayAnimation.cpp"
-            timestampString = "471889135.018315"
+            timestampString = "474458698.078287"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "497"
-            endingLineNumber = "497"
+            startingLineNumber = "498"
+            endingLineNumber = "498"
             landmarkName = "VideoFileInstance::startDecoding()"
             landmarkType = "5">
          </BreakpointContent>
@@ -426,11 +426,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/OverlayAnimation.cpp"
-            timestampString = "471889135.018315"
+            timestampString = "474458698.078287"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "510"
-            endingLineNumber = "510"
+            startingLineNumber = "511"
+            endingLineNumber = "511"
             landmarkName = "VideoFileInstance::startDecoding()"
             landmarkType = "5">
          </BreakpointContent>
@@ -538,11 +538,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/OverlayAnimation.cpp"
-            timestampString = "471889135.018315"
+            timestampString = "474458698.078287"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "670"
-            endingLineNumber = "670"
+            startingLineNumber = "671"
+            endingLineNumber = "671"
             landmarkName = "VideoFileInstance::getSingleFrame(AVFrame **frame)"
             landmarkType = "5">
          </BreakpointContent>
@@ -554,11 +554,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/OverlayAnimation.cpp"
-            timestampString = "471889135.018315"
+            timestampString = "474458698.078287"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "552"
-            endingLineNumber = "552"
+            startingLineNumber = "553"
+            endingLineNumber = "553"
             landmarkName = "VideoFileInstance::startDecoding()"
             landmarkType = "5">
          </BreakpointContent>
@@ -570,7 +570,23 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/OverlayAnimation.cpp"
-            timestampString = "471889135.018315"
+            timestampString = "474458698.078287"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "578"
+            endingLineNumber = "578"
+            landmarkName = "VideoFileInstance::startDecoding()"
+            landmarkType = "5">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Restreaming/OverlayAnimation.cpp"
+            timestampString = "474458698.078287"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "577"
@@ -586,11 +602,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/OverlayAnimation.cpp"
-            timestampString = "471889135.018315"
+            timestampString = "474458698.078287"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "576"
-            endingLineNumber = "576"
+            startingLineNumber = "489"
+            endingLineNumber = "489"
             landmarkName = "VideoFileInstance::startDecoding()"
             landmarkType = "5">
          </BreakpointContent>
@@ -602,27 +618,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/OverlayAnimation.cpp"
-            timestampString = "471889135.018315"
+            timestampString = "474458698.078287"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "488"
-            endingLineNumber = "488"
-            landmarkName = "VideoFileInstance::startDecoding()"
-            landmarkType = "5">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Restreaming/OverlayAnimation.cpp"
-            timestampString = "471889135.018315"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "812"
-            endingLineNumber = "812"
+            startingLineNumber = "813"
+            endingLineNumber = "813"
             landmarkName = "VideoFileInstance::reportStatus(int percent)"
             landmarkType = "5">
          </BreakpointContent>
@@ -634,11 +634,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/Api.cpp"
-            timestampString = "472028631.819626"
+            timestampString = "473355509.989616"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "214"
-            endingLineNumber = "214"
+            startingLineNumber = "251"
+            endingLineNumber = "251"
             landmarkName = "handle_post(http_request request)"
             landmarkType = "7">
          </BreakpointContent>
@@ -650,11 +650,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/Api.cpp"
-            timestampString = "472028631.819626"
+            timestampString = "473355509.989616"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "202"
-            endingLineNumber = "202"
+            startingLineNumber = "239"
+            endingLineNumber = "239"
             landmarkName = "handle_post(http_request request)"
             landmarkType = "7">
          </BreakpointContent>
@@ -666,11 +666,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/OverlayAnimation.cpp"
-            timestampString = "471889135.018315"
+            timestampString = "474458698.078287"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "798"
-            endingLineNumber = "798"
+            startingLineNumber = "799"
+            endingLineNumber = "799"
             landmarkName = "VideoFileInstance::openInputAndOutputFiles()"
             landmarkType = "5">
          </BreakpointContent>
@@ -746,11 +746,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/OverlayAnimation.cpp"
-            timestampString = "471889135.018315"
+            timestampString = "474458698.078287"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "493"
-            endingLineNumber = "493"
+            startingLineNumber = "494"
+            endingLineNumber = "494"
             landmarkName = "VideoFileInstance::startDecoding()"
             landmarkType = "5">
          </BreakpointContent>
@@ -1082,11 +1082,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/ImageSequence.cpp"
-            timestampString = "467836043.10229"
+            timestampString = "473576988.929487"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "87"
-            endingLineNumber = "87"
+            startingLineNumber = "90"
+            endingLineNumber = "90"
             landmarkName = "ImageSequence::parseMetaFile(const char *metaFileName)"
             landmarkType = "5">
          </BreakpointContent>
@@ -1094,15 +1094,15 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "No"
+            shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/ImageSequence.cpp"
-            timestampString = "467836043.10229"
+            timestampString = "473576988.929487"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "89"
-            endingLineNumber = "89"
+            startingLineNumber = "92"
+            endingLineNumber = "92"
             landmarkName = "ImageSequence::parseMetaFile(const char *metaFileName)"
             landmarkType = "5">
          </BreakpointContent>
@@ -1110,7 +1110,7 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "No"
+            shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/ImageSequence.cpp"
@@ -1258,11 +1258,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/ImageSequence.cpp"
-            timestampString = "467836043.10229"
+            timestampString = "473576988.929487"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "160"
-            endingLineNumber = "160"
+            startingLineNumber = "163"
+            endingLineNumber = "163"
             landmarkName = "ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,int contentVideoPts)"
             landmarkType = "5">
          </BreakpointContent>
@@ -1274,11 +1274,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/ImageSequence.cpp"
-            timestampString = "467836043.10229"
+            timestampString = "473576988.929487"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "166"
-            endingLineNumber = "166"
+            startingLineNumber = "169"
+            endingLineNumber = "169"
             landmarkName = "ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,int contentVideoPts)"
             landmarkType = "5">
          </BreakpointContent>
@@ -1290,11 +1290,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/ImageSequence.cpp"
-            timestampString = "467836043.10229"
+            timestampString = "473576988.929487"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "191"
-            endingLineNumber = "191"
+            startingLineNumber = "194"
+            endingLineNumber = "194"
             landmarkName = "ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,int contentVideoPts)"
             landmarkType = "5">
          </BreakpointContent>
@@ -1302,7 +1302,7 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "No"
+            shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/ImageSequence.cpp"
@@ -1322,11 +1322,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/ImageSequence.cpp"
-            timestampString = "467836202.93022"
+            timestampString = "473576988.929487"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "264"
-            endingLineNumber = "264"
+            startingLineNumber = "267"
+            endingLineNumber = "267"
             landmarkName = "ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,int contentVideoPts)"
             landmarkType = "5">
          </BreakpointContent>
@@ -1339,11 +1339,11 @@
             condition = "currFrameNum==62"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/ImageSequence.cpp"
-            timestampString = "467836202.93022"
+            timestampString = "473576988.929487"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "257"
-            endingLineNumber = "257"
+            startingLineNumber = "260"
+            endingLineNumber = "260"
             landmarkName = "ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,int contentVideoPts)"
             landmarkType = "5">
             <Actions>
@@ -1363,11 +1363,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/ImageSequence.cpp"
-            timestampString = "467836043.10229"
+            timestampString = "473576988.929487"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "170"
-            endingLineNumber = "170"
+            startingLineNumber = "173"
+            endingLineNumber = "173"
             landmarkName = "ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,int contentVideoPts)"
             landmarkType = "5">
          </BreakpointContent>
@@ -1379,11 +1379,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/ImageSequence.cpp"
-            timestampString = "467836202.93022"
+            timestampString = "473576988.929487"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "277"
-            endingLineNumber = "277"
+            startingLineNumber = "280"
+            endingLineNumber = "280"
             landmarkName = "ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,int contentVideoPts)"
             landmarkType = "5">
          </BreakpointContent>
@@ -1395,11 +1395,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/ImageSequence.cpp"
-            timestampString = "467836202.93022"
+            timestampString = "473576988.929487"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "277"
-            endingLineNumber = "277"
+            startingLineNumber = "280"
+            endingLineNumber = "280"
             landmarkName = "ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,int contentVideoPts)"
             landmarkType = "5">
          </BreakpointContent>
@@ -1411,11 +1411,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/ImageSequence.cpp"
-            timestampString = "467839551.833581"
+            timestampString = "473576988.929487"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "252"
-            endingLineNumber = "252"
+            startingLineNumber = "255"
+            endingLineNumber = "255"
             landmarkName = "ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,int contentVideoPts)"
             landmarkType = "5">
          </BreakpointContent>
@@ -1427,11 +1427,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/Api.cpp"
-            timestampString = "471884992.091147"
+            timestampString = "472715208.573908"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "69"
-            endingLineNumber = "69"
+            startingLineNumber = "70"
+            endingLineNumber = "70"
             landmarkName = "operator()()"
             landmarkType = "5">
          </BreakpointContent>
@@ -1443,11 +1443,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/Api.cpp"
-            timestampString = "471884992.091147"
+            timestampString = "472715208.573908"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "64"
-            endingLineNumber = "64"
+            startingLineNumber = "65"
+            endingLineNumber = "65"
             landmarkName = "operator()()"
             landmarkType = "5">
          </BreakpointContent>
@@ -1459,12 +1459,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/Api.cpp"
-            timestampString = "471884992.091147"
+            timestampString = "472715208.573908"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "48"
-            endingLineNumber = "48"
-            landmarkName = "Task(string _videoPath,string _outputFilePath, vector&lt;string&gt; _animationPathList,int _reportingEnabled,int _uniqueId)"
+            startingLineNumber = "49"
+            endingLineNumber = "49"
+            landmarkName = "Task(string _videoPath,string _outputFilePath, vector&lt;string&gt; _animationPathList,int _reportingEnabled,string _uniqueId)"
             landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>
@@ -1491,11 +1491,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/ImageSequence.cpp"
-            timestampString = "467836202.93022"
+            timestampString = "473576988.929487"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "254"
-            endingLineNumber = "254"
+            startingLineNumber = "257"
+            endingLineNumber = "257"
             landmarkName = "ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,int contentVideoPts)"
             landmarkType = "5">
          </BreakpointContent>
@@ -1523,11 +1523,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/ImageSequence.cpp"
-            timestampString = "467850482.118483"
+            timestampString = "473576988.929487"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "194"
-            endingLineNumber = "194"
+            startingLineNumber = "197"
+            endingLineNumber = "197"
             landmarkName = "ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,int contentVideoPts)"
             landmarkType = "5">
          </BreakpointContent>
@@ -1539,11 +1539,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/ImageSequence.cpp"
-            timestampString = "467850490.821083"
+            timestampString = "473576988.929487"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "280"
-            endingLineNumber = "280"
+            startingLineNumber = "283"
+            endingLineNumber = "283"
             landmarkName = "ImageSequence::getFrame(float contentVideoTimeBase , float ptsFactor,int contentVideoPts)"
             landmarkType = "5">
          </BreakpointContent>
@@ -1555,11 +1555,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/Api.cpp"
-            timestampString = "471889857.965616"
+            timestampString = "472715208.573908"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "100"
-            endingLineNumber = "100"
+            startingLineNumber = "101"
+            endingLineNumber = "101"
             landmarkName = "handle_get(http_request request)"
             landmarkType = "7">
          </BreakpointContent>
@@ -1571,11 +1571,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/Api.cpp"
-            timestampString = "471935347.720358"
+            timestampString = "472715208.573908"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "124"
-            endingLineNumber = "124"
+            startingLineNumber = "125"
+            endingLineNumber = "125"
             landmarkName = "handle_get(http_request request)"
             landmarkType = "7">
          </BreakpointContent>
@@ -1587,11 +1587,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/OverlayAnimation.cpp"
-            timestampString = "471892948.74152"
+            timestampString = "474458698.078287"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "811"
-            endingLineNumber = "811"
+            startingLineNumber = "812"
+            endingLineNumber = "812"
             landmarkName = "VideoFileInstance::reportStatus(int percent)"
             landmarkType = "5">
          </BreakpointContent>
@@ -1683,11 +1683,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/Api.cpp"
-            timestampString = "472020937.057619"
+            timestampString = "472715208.573908"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "59"
-            endingLineNumber = "59"
+            startingLineNumber = "60"
+            endingLineNumber = "60"
             landmarkName = "operator()()"
             landmarkType = "5">
          </BreakpointContent>
@@ -1699,11 +1699,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/Api.cpp"
-            timestampString = "472021026.168007"
+            timestampString = "473355509.989616"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "147"
-            endingLineNumber = "147"
+            startingLineNumber = "209"
+            endingLineNumber = "209"
             landmarkName = "handle_post(http_request request)"
             landmarkType = "7">
          </BreakpointContent>
@@ -1715,45 +1715,141 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Restreaming/Api.cpp"
-            timestampString = "472021051.785919"
+            timestampString = "472715208.573908"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "163"
-            endingLineNumber = "163"
-            landmarkName = "handle_post(http_request request)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Restreaming/Api.cpp"
-            timestampString = "472028631.819626"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "172"
-            endingLineNumber = "172"
-            landmarkName = "handle_post(http_request request)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Restreaming/Api.cpp"
-            timestampString = "472021227.181438"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "71"
-            endingLineNumber = "71"
+            startingLineNumber = "72"
+            endingLineNumber = "72"
             landmarkName = "operator()()"
             landmarkType = "5">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Restreaming/ImageSequence.cpp"
+            timestampString = "472069939.940218"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "79"
+            endingLineNumber = "79"
+            landmarkName = "ImageSequence::readJson(const JsonValue&amp; json)"
+            landmarkType = "5">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Restreaming/ImageSequence.cpp"
+            timestampString = "472070173.321399"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "52"
+            endingLineNumber = "52"
+            landmarkName = "ImageSequence::readJson(const JsonValue&amp; json)"
+            landmarkType = "5">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Restreaming/Api.cpp"
+            timestampString = "473351574.34601"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "136"
+            endingLineNumber = "136"
+            landmarkName = "handle_get(http_request request)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Restreaming/Api.cpp"
+            timestampString = "473351575.895189"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "137"
+            endingLineNumber = "137"
+            landmarkName = "handle_get(http_request request)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Restreaming/Api.cpp"
+            timestampString = "473355509.989616"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "166"
+            endingLineNumber = "166"
+            landmarkName = "handle_post(http_request request)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "handle_post(web::http::http_request)"
+                  moduleName = "Restreaming"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/apple/Documents/my_streaming_lib/Restreaming/Restreaming/Api.cpp"
+                  timestampString = "473355233.964883"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "166"
+                  endingLineNumber = "166"
+                  offsetFromSymbolStart = "125">
+               </Location>
+               <Location
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "handle_post(web::http::http_request)::$_0::operator()(pplx::task&lt;std::__1::basic_string&lt;char, std::__1::char_traits&lt;char&gt;, std::__1::allocator&lt;char&gt; &gt; &gt;) const"
+                  moduleName = "Restreaming"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/apple/Documents/my_streaming_lib/Restreaming/Restreaming/Api.cpp"
+                  timestampString = "473355233.965093"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "167"
+                  endingLineNumber = "167"
+                  offsetFromSymbolStart = "22">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Restreaming/Api.cpp"
+            timestampString = "473355509.989616"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "169"
+            endingLineNumber = "169"
+            landmarkName = "handle_post(http_request request)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
